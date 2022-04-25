@@ -42,10 +42,6 @@ contract Raccools {
   mapping(uint256 => uint256) _furs;
   mapping(uint256 => uint256) _faces;
 
-  uint256 private _sizeBackgrounds = _backgroundRarities[1];
-  uint256 private _sizeFurs = _furRarities[1];
-  uint256 private _sizeFaces = _faceRarities[1];
-
   constructor(){
     for(uint i=0; i < 2; i++){
       _backgrounds[_backgroundRarities[i]] = i+1;
@@ -58,22 +54,26 @@ contract Raccools {
     for(uint i=0; i < 2; i++){
       _faces[_faceRarities[i]] = i+1;
     }
+
+    console.log(background(0)[0]);
+    console.log(fur(0)[0]);
+    console.log(face(0)[0]);
   }
 
   function face(uint256 tokenId_) public view returns(string[2] memory){
-    return _faceTraits[traitIndex(tokenId_, _sizeFaces, _faces)];
+    return _faceTraits[generateTrait(tokenId_, _faces, _faceRarities[1])];
   }
 
   function background(uint256 tokenId_) public view returns(string[2] memory){
-    return _backgroundTraits[traitIndex(tokenId_, _sizeBackgrounds, _backgrounds)];
+    return _backgroundTraits[generateTrait(tokenId_, _backgrounds, _backgroundRarities[1])];
   }
 
   function fur(uint256 tokenId_) public view returns(string[2] memory){
-    return _furTraits[traitIndex(tokenId_, _sizeFurs, _furs)];
+    return _furTraits[generateTrait(tokenId_, _furs, _furRarities[1])];
   }
 
-  // get a random trait index from a rarity-trait mapping
-  function traitIndex(uint256 tokenId_, uint256 rangeSize_, mapping(uint256 => uint256) storage ranges_) private view returns(uint256){
+  // get a random trait index from the rarity-trait mapping
+  function generateTrait(uint256 tokenId_, mapping(uint256 => uint256) storage ranges_, uint256 rangeSize_) private view returns(uint256){
     uint256 rangeIndex = random(tokenId_.toString()) % rangeSize_;
 
     while(rangeIndex > 0){
@@ -85,7 +85,7 @@ contract Raccools {
     return 0;
   }
 
-  // get a pseudorandom uint256 using a global and given seed
+  // get a pseudorandom uint256 using the global and the given seed
   function random(string memory seed_) private view returns (uint256) {
     bytes memory seed = abi.encodePacked(_baseSeed, seed_);
     return uint256(keccak256(seed));
