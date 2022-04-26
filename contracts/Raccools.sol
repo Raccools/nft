@@ -30,19 +30,35 @@ contract Raccools {
     ["yum", "svgY"]
   ];
 
+  string[2][2] private _headTraits = [
+    ["mohawk", "svg=="],
+    ["flower", "svg+="]
+  ];
+
+  string[2][2] private _clothesTraits = [
+    ["suit", "svggg"],
+    ["bag", "svgff"]
+  ];
+
   // rarity intervals
   // higher two adjacent rarity distances higher the latter trait occurrence
   uint256[2] private _backgroundRarities = [5, 10];
   uint256[2] private _furRarities = [5, 10];
   uint256[2] private _faceRarities = [8, 10];
+  uint256[2] private _headRarities = [3, 10];
+  uint256[2] private _clothesRarities = [5, 10];
 
   // rarity-trait mapping
   // @dev same idea as erc721a `ownerOf` strategy to link owner to token id
   mapping(uint256 => uint256) _backgrounds;
   mapping(uint256 => uint256) _furs;
   mapping(uint256 => uint256) _faces;
+  mapping(uint256 => uint256) _heads;
+  mapping(uint256 => uint256) _clothes;
 
   constructor(){
+    // @dev iterate over rarity list length
+    // numbers are hardcoded to save gas
     for(uint i=0; i < 2; i++){
       _backgrounds[_backgroundRarities[i]] = i+1;
     }
@@ -55,9 +71,19 @@ contract Raccools {
       _faces[_faceRarities[i]] = i+1;
     }
 
+    for(uint i=0; i < 2; i++){
+      _heads[_headRarities[i]] = i+1;
+    }
+
+    for(uint i=0; i < 2; i++){
+      _clothes[_clothesRarities[i]] = i+1;
+    }
+
     console.log(background(0)[0]);
     console.log(fur(0)[0]);
     console.log(face(0)[0]);
+    console.log(head(0)[0]);
+    console.log(clothes(0)[0]);
   }
 
   function face(uint256 tokenId_) public view returns(string[2] memory){
@@ -70,6 +96,14 @@ contract Raccools {
 
   function fur(uint256 tokenId_) public view returns(string[2] memory){
     return _furTraits[generateTrait(tokenId_, _furs, _furRarities[1])];
+  }
+
+  function head(uint256 tokenId_) public view returns(string[2] memory){
+    return _headTraits[generateTrait(tokenId_, _heads, _headRarities[1])];
+  }
+
+  function clothes(uint256 tokenId_) public view returns(string[2] memory){
+    return _clothesTraits[generateTrait(tokenId_, _clothes, _clothesRarities[1])];
   }
 
   // get a random trait index from the rarity-trait mapping
