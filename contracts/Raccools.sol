@@ -40,45 +40,13 @@ contract Raccools {
     ["bag", "svgff"]
   ];
 
-  // rarity intervals
-  // higher two adjacent rarity distances higher the latter trait occurrence
-  uint256[2] private _backgroundRarities = [5, 10];
-  uint256[2] private _furRarities = [5, 10];
-  uint256[2] private _faceRarities = [8, 10];
-  uint256[2] private _headRarities = [3, 10];
-  uint256[2] private _clothesRarities = [5, 10];
-
-  // rarity-trait mapping
-  // @dev same idea as erc721a `ownerOf` strategy to link owner to token id
-  mapping(uint256 => uint256) _backgrounds;
-  mapping(uint256 => uint256) _furs;
-  mapping(uint256 => uint256) _faces;
-  mapping(uint256 => uint256) _heads;
-  mapping(uint256 => uint256) _clothes;
+  uint256[2] private _backgroundRarities = [5, 5];
+  uint256[2] private _furRarities = [5, 5];
+  uint256[2] private _faceRarities = [5, 5];
+  uint256[2] private _headRarities = [5, 5];
+  uint256[2] private _clothesRarities = [5, 5];
 
   constructor(){
-    // @dev iterate over rarity list length
-    // numbers are hardcoded to save gas
-    for(uint i=0; i < 2; i++){
-      _backgrounds[_backgroundRarities[i]] = i+1;
-    }
-
-    for(uint i=0; i < 2; i++){
-      _furs[_furRarities[i]] = i+1;
-    }
-
-    for(uint i=0; i < 2; i++){
-      _faces[_faceRarities[i]] = i+1;
-    }
-
-    for(uint i=0; i < 2; i++){
-      _heads[_headRarities[i]] = i+1;
-    }
-
-    for(uint i=0; i < 2; i++){
-      _clothes[_clothesRarities[i]] = i+1;
-    }
-
     console.log(background(0)[0]);
     console.log(fur(0)[0]);
     console.log(face(0)[0]);
@@ -86,37 +54,36 @@ contract Raccools {
     console.log(clothes(0)[0]);
   }
 
-  function face(uint256 tokenId_) public view returns(string[2] memory){
-    return _faceTraits[generateTrait(tokenId_, _faces, _faceRarities[1])];
+  function face(uint256 tokenId_) private view returns(string[2] memory){
+    return _faceTraits[generateTrait(tokenId_, _faceRarities)];
   }
 
-  function background(uint256 tokenId_) public view returns(string[2] memory){
-    return _backgroundTraits[generateTrait(tokenId_, _backgrounds, _backgroundRarities[1])];
+  function background(uint256 tokenId_) private view returns(string[2] memory){
+    return _backgroundTraits[generateTrait(tokenId_, _backgroundRarities)];
   }
 
-  function fur(uint256 tokenId_) public view returns(string[2] memory){
-    return _furTraits[generateTrait(tokenId_, _furs, _furRarities[1])];
+  function fur(uint256 tokenId_) private view returns(string[2] memory){
+    return _furTraits[generateTrait(tokenId_, _furRarities)];
   }
 
-  function head(uint256 tokenId_) public view returns(string[2] memory){
-    return _headTraits[generateTrait(tokenId_, _heads, _headRarities[1])];
+  function head(uint256 tokenId_) private view returns(string[2] memory){
+    return _headTraits[generateTrait(tokenId_, _headRarities)];
   }
 
-  function clothes(uint256 tokenId_) public view returns(string[2] memory){
-    return _clothesTraits[generateTrait(tokenId_, _clothes, _clothesRarities[1])];
+  function clothes(uint256 tokenId_) private view returns(string[2] memory){
+    return _clothesTraits[generateTrait(tokenId_, _clothesRarities)];
   }
 
-  // get a random trait index from the rarity-trait mapping
-  function generateTrait(uint256 tokenId_, mapping(uint256 => uint256) storage ranges_, uint256 rangeSize_) private view returns(uint256){
-    uint256 rangeIndex = random(tokenId_.toString()) % rangeSize_;
+  function generateTrait(uint256 tokenId_, uint256[2] memory rarities_) private view returns(uint256){
+    uint256 n = 1 + random(tokenId_.toString()) % 10;
+    uint256 trait = 0;
 
-    while(rangeIndex > 0){
-      uint256 trait = ranges_[rangeIndex];
-      if(trait > 0) return trait;
-      rangeIndex--;
+    while(n > rarities_[trait]){
+      n -= rarities_[trait];
+      trait++;
     }
 
-    return 0;
+    return trait;
   }
 
   // get a pseudorandom uint256 using the global and the given seed
@@ -125,7 +92,7 @@ contract Raccools {
     return uint256(keccak256(seed));
   }
 
-//  function tokenURI(uint256 tokenId_) public view returns(string memory){
+//  function tokenURI(uint256 tokenId_) external view returns(string memory){
 //    return "data:application/json;base64,";
 //  }
 }
