@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import '@openzeppelin/contracts/utils/Strings.sol';
 import "./libraries/Base64.sol";
+import "./libraries/Traits.sol";
 import "hardhat/console.sol";
 
 // @author mande.eth
@@ -15,34 +16,11 @@ contract Raccools {
   string public _provenance;
 
   // trait name and svg image
-  string[2][4] private _backgroundTraits = [
-    ["yellow", "svg1"],
-    ["blue", "svg2"]
-  ];
-
-  string[2][4] private _furTraits = [
-    ["basic 1", "svga"],
-    ["basic 2", "svgb"]
-  ];
-
-  string[2][4] private _faceTraits = [
-    ["smile", "svgX"],
-    ["yum", "svgY"]
-  ];
-
-  string[2][4] private _headTraits = [
-    ["", ""],
-    ["", ""],
-    ["mohawk", "svg=="],
-    ["flower", "svg+="]
-  ];
-
-  string[2][4] private _clothesTraits = [
-    ["", ""],
-    ["", ""],
-    ["suit", "svggg"],
-    ["bag", "svgff"]
-  ];
+  string[2][4] private _backgroundTraits = Traits.backgroundTraits();
+  string[2][4] private _furTraits = Traits.furTraits();
+  string[2][4] private _faceTraits = Traits.faceTraits();
+  string[2][4] private _headTraits = Traits.headTraits();
+  string[2][4] private _clothesTraits = Traits.clothesTraits();
 
   // generator rarities
   uint256[4] private _backgroundRarities = [5, 5];
