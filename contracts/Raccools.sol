@@ -82,8 +82,8 @@ contract Raccools {
     return _clothesTraits[customTrait(tokenId_, _clothesRarities, _customClothes)];
   }
 
-  function customTrait(uint256 tokenId_, uint256[4] memory rarities_, mapping(uint256 => uint256) storage customs_) private view returns(uint256){
-    uint256 n = customs_[tokenId_];
+  function customTrait(uint256 tokenId_, uint256[4] memory rarities_, mapping(uint256 => uint256) storage custom_) private view returns(uint256){
+    uint256 n = custom_[tokenId_];
     if(n == 0) return generateTrait(tokenId_, rarities_);
 
     return n;
