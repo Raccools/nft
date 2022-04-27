@@ -4,6 +4,7 @@ pragma solidity ^0.8.13;
 import '@openzeppelin/contracts/utils/Strings.sol';
 import "./libraries/Base64.sol";
 import "./libraries/Traits.sol";
+import "./interfaces/IWardrobe.sol";
 import "hardhat/console.sol";
 
 // @author mande.eth
@@ -16,11 +17,12 @@ contract Raccools {
   string public _provenance;
 
   // trait name and svg image
-  string[2][4] private _backgroundTraits = Traits.backgroundTraits();
-  string[2][4] private _furTraits = Traits.furTraits();
-  string[2][4] private _faceTraits = Traits.faceTraits();
-  string[2][4] private _headTraits = Traits.headTraits();
-  string[2][4] private _clothesTraits = Traits.clothesTraits();
+  // TODO: trocar library traits para contrato wardrobe
+  string[2][4] private _backgroundTraits = Traits.backgrounds();
+  string[2][4] private _furTraits = Traits.furs();
+  string[2][4] private _faceTraits = Traits.faces();
+  string[2][4] private _headTraits = Traits.heads();
+  string[2][4] private _clothesTraits = Traits.clothes();
 
   // generator rarities
   uint256[4] private _backgroundRarities = [5, 5];
@@ -32,32 +34,52 @@ contract Raccools {
   mapping(uint256 => uint256) _customHead;
   mapping(uint256 => uint256) _customClothes;
 
+  struct Raccool {
+    string[2] background;
+    string[2] fur;
+    string[2] face;
+    string[2] head;
+    string[2] clothes;
+  }
+
   constructor(){
-    console.log(background(0)[0]);
-    console.log(fur(0)[0]);
-    console.log(face(0)[0]);
-    console.log(head(0)[0]);
-    console.log(clothes(0)[0]);
+    Raccool memory rac = getRaccool(6965);
+
+    console.log(rac.background[0]);
+    console.log(rac.fur[0]);
+    console.log(rac.face[0]);
+    console.log(rac.head[0]);
+    console.log(rac.clothes[0]);
   }
 
-  function face(uint256 tokenId_) private view returns(string[2] memory){
-    return _faceTraits[generateTrait(tokenId_, _faceRarities)];
+  // TODO
+  function customize(uint256 tokenId_, uint256 head_, uint256 clothes_) external {
+    IWardrobe wardrobe = IWardrobe(0xf7C08eD8430dCA5BAD72aB86906059BdEdAF5Dc4); 
+
+    // require(msg.sender == ownerOf(tokenId_));
+
+    uint256 currentHead = _customHead[tokenId_];
+    uint256 currentClothes = _customClothes[tokenId_];
+
+    if(head_ > 0){
+      if(currentHead > 1) wardrobe.mint(msg.sender, currentHead);
+      if(head_ > 1) wardrobe.burn(msg.sender, head_);
+      _customHead[tokenId_] = head_;
+    }
+
+    if(clothes_ > 0){
+      if(currentClothes > 1) wardrobe.mint(msg.sender, currentHead);
+      if(clothes_ > 0) wardrobe.burn(msg.sender, clothes_);
+      _customClothes[tokenId_] = clothes_;
+    }
   }
 
-  function background(uint256 tokenId_) private view returns(string[2] memory){
-    return _backgroundTraits[generateTrait(tokenId_, _backgroundRarities)];
-  }
-
-  function fur(uint256 tokenId_) private view returns(string[2] memory){
-    return _furTraits[generateTrait(tokenId_, _furRarities)];
-  }
-
-  function head(uint256 tokenId_) private view returns(string[2] memory){
-    return _headTraits[customTrait(tokenId_, _headRarities, _customHead)];
-  }
-
-  function clothes(uint256 tokenId_) private view returns(string[2] memory){
-    return _clothesTraits[customTrait(tokenId_, _clothesRarities, _customClothes)];
+  function getRaccool(uint256 tokenId_) private view returns(Raccool memory raccool){
+    raccool.background = _backgroundTraits[generateTrait(tokenId_, _backgroundRarities)];
+    raccool.fur = _furTraits[generateTrait(tokenId_, _furRarities)];
+    raccool.face = _faceTraits[generateTrait(tokenId_, _faceRarities)];
+    raccool.head = _headTraits[customTrait(tokenId_, _headRarities, _customHead)];
+    raccool.clothes = _clothesTraits[customTrait(tokenId_, _clothesRarities, _customClothes)];
   }
 
   function customTrait(uint256 tokenId_, uint256[4] memory rarities_, mapping(uint256 => uint256) storage custom_) private view returns(uint256){
