@@ -45,23 +45,23 @@ contract Raccools {
   }
 
   function background(uint256 backgroundIndex_) private pure returns(string[2] memory){
-    return Traits.background(backgroundIndex_);
+    return Traits.backgrounds()[backgroundIndex_];
   }
 
   function fur(uint256 furIndex_) private pure returns(string[2] memory){
-    return Traits.fur(furIndex_);
+    return Traits.furs()[furIndex_];
   }
 
   function face(uint256 faceIndex_) private pure returns(string[2] memory){
-    return Traits.face(faceIndex_);
+    return Traits.faces()[faceIndex_];
   }
 
   function head(uint256 headIndex_) private pure returns(string[2] memory){
-    return Traits.head(headIndex_);
+    return Traits.heads()[headIndex_];
   }
 
   function clothes(uint256 clothesIndex_) private pure returns(string[2] memory){
-    return Traits.clothes(clothesIndex_);
+    return Traits.clothes()[clothesIndex_];
   }
 
   // TODO
