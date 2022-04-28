@@ -4,42 +4,42 @@ pragma solidity ^0.8.13;
 // @author mande.eth
 // @notice
 library Traits {
-  function backgrounds() internal pure returns(string[2][2] memory){
+  function background(uint256 backgroundIndex_) internal pure returns(string[2] memory){
     return [
       ["yellow", "svg1"],
       ["blue", "svg2"]
-    ];
+    ][backgroundIndex_];
   }
 
-  function furs() internal pure returns(string[2][2] memory){
+  function fur(uint256 furIndex_) internal pure returns(string[2] memory){
     return [
       ["basic 1", "svga"],
       ["basic 2", "svgb"]
-    ];
+    ][furIndex_];
   }
 
-  function faces() internal pure returns(string[2][2] memory){
+  function face(uint256 faceIndex_) internal pure returns(string[2] memory){
     return [
       ["smile", "svgX"],
       ["yum", "svgY"]
-    ];
+    ][faceIndex_];
   }
 
-  function heads() internal pure returns(string[2][4] memory){
+  function head(uint256 headIndex_) internal pure returns(string[2] memory){
     return [
       ["", ""],
       ["", ""],
       ["mohawk", "svg=="],
       ["flower", "svg+="]
-    ];
+    ][headIndex_];
   }
 
-  function clothes() internal pure returns(string[2][4] memory){
+  function clothes(uint256 clothesIndex_) internal pure returns(string[2] memory){
     return [
       ["", ""],
       ["", ""],
       ["suit", "svggg"],
       ["bag", "svgff"]
-    ];
+    ][clothesIndex_];
   }
 }

@@ -16,14 +16,6 @@ contract Raccools {
   string public _baseSeed;
   string public _provenance;
 
-  // trait name and svg image
-  // TODO: trocar library traits para contrato wardrobe
-  string[2][4] private _backgroundTraits = Traits.backgrounds();
-  string[2][4] private _furTraits = Traits.furs();
-  string[2][4] private _faceTraits = Traits.faces();
-  string[2][4] private _headTraits = Traits.heads();
-  string[2][4] private _clothesTraits = Traits.clothes();
-
   // generator rarities
   uint256[4] private _backgroundRarities = [5, 5];
   uint256[4] private _furRarities = [5, 5];
@@ -52,6 +44,26 @@ contract Raccools {
     console.log(rac.clothes[0]);
   }
 
+  function background(uint256 backgroundIndex_) private pure returns(string[2] memory){
+    return Traits.background(backgroundIndex_);
+  }
+
+  function fur(uint256 furIndex_) private pure returns(string[2] memory){
+    return Traits.fur(furIndex_);
+  }
+
+  function face(uint256 faceIndex_) private pure returns(string[2] memory){
+    return Traits.face(faceIndex_);
+  }
+
+  function head(uint256 headIndex_) private pure returns(string[2] memory){
+    return Traits.head(headIndex_);
+  }
+
+  function clothes(uint256 clothesIndex_) private pure returns(string[2] memory){
+    return Traits.clothes(clothesIndex_);
+  }
+
   // TODO
   function customize(uint256 tokenId_, uint256 head_, uint256 clothes_) external {
     IWardrobe wardrobe = IWardrobe(0xf7C08eD8430dCA5BAD72aB86906059BdEdAF5Dc4); 
@@ -75,11 +87,11 @@ contract Raccools {
   }
 
   function getRaccool(uint256 tokenId_) private view returns(Raccool memory raccool){
-    raccool.background = _backgroundTraits[generateTrait(tokenId_, _backgroundRarities)];
-    raccool.fur = _furTraits[generateTrait(tokenId_, _furRarities)];
-    raccool.face = _faceTraits[generateTrait(tokenId_, _faceRarities)];
-    raccool.head = _headTraits[customTrait(tokenId_, _headRarities, _customHead)];
-    raccool.clothes = _clothesTraits[customTrait(tokenId_, _clothesRarities, _customClothes)];
+    raccool.background = background(generateTrait(tokenId_, _backgroundRarities));
+    raccool.fur = fur(generateTrait(tokenId_, _furRarities));
+    raccool.face = face(generateTrait(tokenId_, _faceRarities));
+    raccool.head = head(customTrait(tokenId_, _headRarities, _customHead));
+    raccool.clothes = clothes(customTrait(tokenId_, _clothesRarities, _customClothes));
   }
 
   function customTrait(uint256 tokenId_, uint256[4] memory rarities_, mapping(uint256 => uint256) storage custom_) private view returns(uint256){
@@ -106,8 +118,4 @@ contract Raccools {
     bytes memory seed = abi.encodePacked(_baseSeed, seed_);
     return uint256(keccak256(seed));
   }
-
-//  function tokenURI(uint256 tokenId_) external view returns(string memory){
-//    return "data:application/json;base64,";
-//  }
 }
