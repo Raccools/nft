@@ -9,12 +9,11 @@ contract Wardrobe {
   string[2][] private _heads = Traits.heads();
   string[2][] private _clothes = Traits.clothes();
 
-
-  function head(uint256 headIndex_) internal view returns(string[2] memory){
+  function head(uint256 headIndex_) public view returns(string[2] memory){
     return _heads[headIndex_];
   }
 
-  function clothes(uint256 clothesIndex_) internal view returns(string[2] memory){
+  function clothes(uint256 clothesIndex_) public view returns(string[2] memory){
     return _clothes[clothesIndex_];
   }
 }

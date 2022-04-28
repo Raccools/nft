@@ -16,6 +16,8 @@ contract Raccools {
   string public _baseSeed;
   string public _provenance;
 
+  address private _wardrobe;
+
   // generator rarities
   uint256[4] private _backgroundRarities = [5, 5];
   uint256[4] private _furRarities = [5, 5];
@@ -34,7 +36,9 @@ contract Raccools {
     string[2] clothes;
   }
 
-  constructor(){
+  constructor(address wardrobe_){
+    _wardrobe = wardrobe_;
+
     Raccool memory rac = getRaccool(6965);
 
     console.log(rac.background[0]);
@@ -56,17 +60,17 @@ contract Raccools {
     return Traits.faces()[faceIndex_];
   }
 
-  function head(uint256 headIndex_) private pure returns(string[2] memory){
-    return Traits.heads()[headIndex_];
+  function head(uint256 headIndex_) private view returns(string[2] memory){
+    return IWardrobe(_wardrobe).head(headIndex_);
   }
 
-  function clothes(uint256 clothesIndex_) private pure returns(string[2] memory){
-    return Traits.clothes()[clothesIndex_];
+  function clothes(uint256 clothesIndex_) private view returns(string[2] memory){
+    return IWardrobe(_wardrobe).clothes(clothesIndex_);
   }
 
   // TODO
   function customize(uint256 tokenId_, uint256 head_, uint256 clothes_) external {
-    IWardrobe wardrobe = IWardrobe(0xf7C08eD8430dCA5BAD72aB86906059BdEdAF5Dc4); 
+    IWardrobe wardrobe = IWardrobe(_wardrobe); 
 
     // require(msg.sender == ownerOf(tokenId_));
 
