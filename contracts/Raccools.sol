@@ -2,11 +2,12 @@
 pragma solidity ^0.8.13;
 
 import "./ERC721A.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import '@openzeppelin/contracts/utils/Strings.sol';
 import "./libraries/Base64.sol";
 import "./libraries/Traits.sol";
 import "./interfaces/IWardrobe.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import '@openzeppelin/contracts/utils/Strings.sol';
+
 import "hardhat/console.sol";
 
 // @author mande.eth
@@ -18,7 +19,7 @@ contract Raccools is ERC721A, Ownable {
   uint256 public constant _maxSupply = 10_000;
   uint256 public constant _cost = 0.08 ether;
   uint256 public constant _maxMintPerTx = 20;
-  uint256 public _isRevealed;
+  bool public _isRevealed;
 
   // global random seed
   string public _baseSeed;
@@ -48,7 +49,6 @@ contract Raccools is ERC721A, Ownable {
   string private constant _imag1 = '"}], "image": "data:application/json;base64,';
   string private constant _imag2 = '"}';
 
-
   struct Raccool {
     string[2] background;
     string[2] fur;
@@ -76,33 +76,9 @@ contract Raccools is ERC721A, Ownable {
   function mint(uint amount_) external payable callerIsUser {
     require(_totalMinted() + amount_ <= _maxSupply, "Cannot exceed max supply");
     require(amount_ <= _maxMintPerTx, "Cannot exceed 20 per tx");
-    require(msg.value >= amount_ * cost, "Insufficient funds");
+    require(msg.value >= amount_ * _cost, "Insufficient funds");
 
-    _mint(msg.sender, amount_, "", false);
-  }
-
-  function tokenURI(uint256 tokenId_) public view virtual override returns (string memory) {
-    require(_exists(tokenId_), "Token not minted");
-    return _isRevealed? tokenMetadata(tokenId_) : hiddenMetadata(tokenId_);
-  }
-
-  function hiddenMetadata(uint256 tokenId_) public view returns(string memory){
-    Raccool raccool = Raccool(["?", ""], ["?", ""], ["?", ""], ["?", ""], ["?", ""]);
-    string memory attributes = raccoolAttributes(raccool);
-    string memory svg = Base64.encode("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0, 0, 100, 100'><rect width='100' height='100' fill='#f9d100' /></svg>");
-    string memory encodedJson = Base64.encode(abi.encodePacked(_name1, tokenId_.toString(), attributes, _imag1, svg, _imag2));
-
-    return string(abi.encodePacked("data:application/json;base64,", encodedJson));
-  }
-
-  function raccoolAttributes(Raccool memory raccool_) private view returns(string memory){
-    string memory background = raccool_.background[0];
-    string memory fur = raccool_.fur[0];
-    string memory face = raccool_.face[0];
-    string memory head = raccool_.head[0];
-    string memory clothes = raccool_.clothes[0];
-
-    return string(abi.encodePacked(_attr1, background, _attr2, fur, _attr3, face, _attr4, head, _attr5, clothes));
+    _mint(msg.sender, amount_);
   }
 
   function customize(uint256 tokenId_, uint256 head_, uint256 clothes_) external {
@@ -124,6 +100,34 @@ contract Raccools is ERC721A, Ownable {
       if(clothes_ > 0) wardrobe.burn(msg.sender, clothes_);
       _customClothes[tokenId_] = clothes_;
     }
+  }
+
+  function tokenURI(uint256 tokenId_) public view virtual override returns (string memory) {
+    require(_exists(tokenId_), "Token not minted");
+    return _isRevealed? tokenMetadata(tokenId_) : hiddenMetadata(tokenId_);
+  }
+
+  function tokenMetadata(uint256 tokenId_) private pure returns(string memory){
+    return tokenId_.toString();
+  }
+
+  function hiddenMetadata(uint256 tokenId_) private pure returns(string memory){
+    Raccool memory raccool = Raccool(["?", ""], ["?", ""], ["?", ""], ["?", ""], ["?", ""]);
+    string memory attributes = raccoolAttributes(raccool);
+    string memory svg = Base64.encode("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0, 0, 100, 100'><rect width='100' height='100' fill='#f9d100' /></svg>");
+    string memory encodedJson = Base64.encode(abi.encodePacked(_name1, tokenId_.toString(), attributes, _imag1, svg, _imag2));
+
+    return string(abi.encodePacked("data:application/json;base64,", encodedJson));
+  }
+
+  function raccoolAttributes(Raccool memory raccool_) private pure returns(string memory){
+    string memory backgroundName = raccool_.background[0];
+    string memory furName = raccool_.fur[0];
+    string memory faceName = raccool_.face[0];
+    string memory headName = raccool_.head[0];
+    string memory clothesName = raccool_.clothes[0];
+
+    return string(abi.encodePacked(_attr1, backgroundName, _attr2, furName, _attr3, faceName, _attr4, headName, _attr5, clothesName));
   }
 
   function getRaccool(uint256 tokenId_) private view returns(Raccool memory raccool){
