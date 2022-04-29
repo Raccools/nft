@@ -46,7 +46,7 @@ contract Raccools is ERC721A, Ownable {
   string private constant _attr3 = '"}, {"trait_type": "face", "value": "';
   string private constant _attr4 = '"}, {"trait_type": "head", "value": "';
   string private constant _attr5 = '"}, {"trait_type": "clothes", "value": "';
-  string private constant _imag1 = '"}], "image": "data:application/json;base64,';
+  string private constant _imag1 = '"}], "image": "data:image/svg+xml;base64,';
   string private constant _imag2 = '"}';
 
   struct Raccool {
@@ -73,7 +73,7 @@ contract Raccools is ERC721A, Ownable {
     _;
   }
 
-  function mint(uint amount_) external payable callerIsUser {
+  function mint(uint256 amount_) external payable callerIsUser {
     require(_totalMinted() + amount_ <= _maxSupply, "Cannot exceed max supply");
     require(amount_ <= _maxMintPerTx, "Cannot exceed 20 per tx");
     require(msg.value >= amount_ * _cost, "Insufficient funds");
