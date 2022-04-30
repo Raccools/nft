@@ -19,7 +19,6 @@ contract Raccools is ERC721A, Ownable {
   uint256 public constant _maxSupply = 10_000;
   uint256 public constant _cost = 0.08 ether;
   uint256 public constant _maxMintPerTx = 20;
-  bool public _isRevealed;
 
   // global random seed
   string public _baseSeed;
@@ -36,8 +35,8 @@ contract Raccools is ERC721A, Ownable {
   uint256[4] private _clothesRarities = [0, 0, 5, 5];
 
   // token custom assets
-  mapping(uint256 => uint256) _customHead;
-  mapping(uint256 => uint256) _customClothes;
+  mapping(uint256 => uint256) private _customHead;
+  mapping(uint256 => uint256) private _customClothes;
 
   // metadata
   string private constant _name1 = '{"name": "Raccools #';
@@ -59,13 +58,6 @@ contract Raccools is ERC721A, Ownable {
 
   constructor(address wardrobe_) ERC721A("Raccools", "RACCOOL"){
     _wardrobe = wardrobe_;
-
-    Raccool memory rac = getRaccool(6965);
-    console.log(rac.background[0]);
-    console.log(rac.fur[0]);
-    console.log(rac.face[0]);
-    console.log(rac.head[0]);
-    console.log(rac.clothes[0]);
   }
 
   modifier callerIsUser() {
@@ -104,7 +96,11 @@ contract Raccools is ERC721A, Ownable {
 
   function tokenURI(uint256 tokenId_) public view virtual override returns (string memory) {
     require(_exists(tokenId_), "Token not minted");
-    return _isRevealed? tokenMetadata(tokenId_) : hiddenMetadata(tokenId_);
+    return isRevealed()? tokenMetadata(tokenId_) : hiddenMetadata(tokenId_);
+  }
+
+  function isRevealed() public view returns(bool){
+    return bytes(_baseSeed).length > 0;
   }
 
   function tokenMetadata(uint256 tokenId_) private pure returns(string memory){
@@ -192,10 +188,6 @@ contract Raccools is ERC721A, Ownable {
 
   function setBaseSeed(string memory seed_) external onlyOwner {
     _baseSeed = seed_;
-  }
-
-  function setIsRelealed(bool value_) external onlyOwner {
-    _isRevealed = value_;
   }
 
   function withdraw() external onlyOwner {
