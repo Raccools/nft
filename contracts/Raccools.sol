@@ -38,7 +38,7 @@ contract Raccools is ERC721A, Ownable {
   mapping(uint256 => uint256) private _customHead;
   mapping(uint256 => uint256) private _customClothes;
 
-  // metadata
+  // json metadata
   string private constant _name1 = '{"name": "Raccools #';
   string private constant _attr1 = '", "attributes": [{"trait_type": "background", "value": "';
   string private constant _attr2 = '"}, {"trait_type": "fur", "value": "';
@@ -47,6 +47,10 @@ contract Raccools is ERC721A, Ownable {
   string private constant _attr5 = '"}, {"trait_type": "clothes", "value": "';
   string private constant _imag1 = '"}], "image": "data:image/svg+xml;base64,';
   string private constant _imag2 = '"}';
+
+  // svg tag TODO: background color no svg
+  string private constant _svg1 = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0, 0, 100, 100'>";
+  string private constant _svg2 = "</svg>";
 
   struct Raccool {
     string[2] background;
@@ -73,6 +77,7 @@ contract Raccools is ERC721A, Ownable {
     _mint(msg.sender, amount_);
   }
 
+  // TODO: is it needed to use callerIsUser?
   function customize(uint256 tokenId_, uint256 head_, uint256 clothes_) external {
     require(msg.sender == ownerOf(tokenId_));
 
@@ -103,17 +108,33 @@ contract Raccools is ERC721A, Ownable {
     return bytes(_baseSeed).length > 0;
   }
 
-  function tokenMetadata(uint256 tokenId_) private pure returns(string memory){
-    return tokenId_.toString();
-  }
-
-  function hiddenMetadata(uint256 tokenId_) private pure returns(string memory){
-    Raccool memory raccool = Raccool(["?", ""], ["?", ""], ["?", ""], ["?", ""], ["?", ""]);
+  function tokenMetadata(uint256 tokenId_) private view returns(string memory){
+    Raccool memory raccool = getRaccool(tokenId_);
     string memory attributes = raccoolAttributes(raccool);
-    string memory svg = Base64.encode("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0, 0, 100, 100'><rect width='100' height='100' fill='#f9d100' /></svg>");
+    string memory svg = raccoolImage(raccool);
     string memory encodedJson = Base64.encode(abi.encodePacked(_name1, tokenId_.toString(), attributes, _imag1, svg, _imag2));
 
     return string(abi.encodePacked("data:application/json;base64,", encodedJson));
+  }
+
+  // TODO: hardcode hidden image encoded base64
+  function hiddenMetadata(uint256 tokenId_) private pure returns(string memory){
+    Raccool memory raccool = Raccool(["?", ""], ["?", ""], ["?", ""], ["?", ""], ["?", ""]);
+    string memory attributes = raccoolAttributes(raccool);
+    string memory svg = Base64.encode(abi.encodePacked(_svg1, "<rect width='100' height='100' fill='#f9d100' />", _svg2));
+    string memory encodedJson = Base64.encode(abi.encodePacked(_name1, tokenId_.toString(), attributes, _imag1, svg, _imag2));
+
+    return string(abi.encodePacked("data:application/json;base64,", encodedJson));
+  }
+
+  function raccoolImage(Raccool memory raccool_) private pure returns(string memory){
+    string memory backgroundSvg = raccool_.background[1];
+    string memory furSvg = raccool_.fur[1];
+    string memory faceSvg = raccool_.face[1];
+    string memory headSvg = raccool_.head[1];
+    string memory clothesSvg = raccool_.clothes[1];
+
+    return Base64.encode(abi.encodePacked(_svg1, backgroundSvg, furSvg, faceSvg, headSvg, clothesSvg, _svg2));
   }
 
   function raccoolAttributes(Raccool memory raccool_) private pure returns(string memory){

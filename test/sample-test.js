@@ -75,17 +75,7 @@ describe("tokenURI", function(){
     svg = svg.replace("data:image/svg+xml;base64,", "")
     svg = atob(svg)
 
-    expect(svg.startsWith("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0, 0, 100, 100'>")).to.equal(true)
-  })
-
-  it("Reverts when token is not minted", async function () {
-    await expect(raccools.tokenURI(1)).to.be.revertedWith("Token not minted");
-  })
-
-  it("Reveals metadata when base seed is set", async function () {
-    expect(await raccools.isRevealed()).to.equal(false)
-    expect(await raccools.setBaseSeed("test"))
-    expect(await raccools.isRevealed()).to.equal(true)
+    expect(svg.startsWith("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0, 0, 100, 100'>")).to.be.true
   })
 
   it("Shows final metadata when revealed", async function () {
@@ -99,16 +89,27 @@ describe("tokenURI", function(){
     metadata = JSON.parse(atob(metadata))
 
     expect(metadata.name).to.equal("Raccools #1")
-    expect(metadata.attributes[0].value).to.equal("?")
-    expect(metadata.attributes[1].value).to.equal("?")
-    expect(metadata.attributes[2].value).to.equal("?")
-    expect(metadata.attributes[3].value).to.equal("?")
-    expect(metadata.attributes[4].value).to.equal("?")
+    expect(metadata.attributes[0].value == "?").to.be.false
+    expect(metadata.attributes[1].value == "?").to.be.false
+    expect(metadata.attributes[2].value == "?").to.be.false
+    expect(metadata.attributes[3].value == "?").to.be.false
+    expect(metadata.attributes[4].value == "?").to.be.false
 
     let svg = metadata.image
     svg = svg.replace("data:image/svg+xml;base64,", "")
     svg = atob(svg)
 
-    expect(svg.startsWith("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0, 0, 100, 100'>")).to.equal(true)
+    expect(svg.startsWith("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0, 0, 100, 100'>")).to.be.true
   })
+
+  it("Reverts when token is not minted", async function () {
+    await expect(raccools.tokenURI(1)).to.be.revertedWith("Token not minted");
+  })
+
+  it("Reveals metadata when base seed is set", async function () {
+    expect(await raccools.isRevealed()).to.be.false
+    expect(await raccools.setBaseSeed("test"))
+    expect(await raccools.isRevealed()).to.be.true
+  })
+
 })
