@@ -45,17 +45,17 @@ describe("mint", function() {
     await expect(raccools.mint(20, {value: _cost.mul(20).sub(1)})).to.reverted
   })
 
-  context("Gas used", function(){
-    it("Minting one nft costs lte 75,218 gas", async function(){
-      expect(await estimateGas("mint", "uint256", "1", _cost)).lte(75218)
+  context("gas used", function(){
+    it("Minting one nft costs 75,218 gas", async function(){
+      expect(await estimateGas("mint", "uint256", "1", _cost)).eq(75218)
     })
 
-    it("Minting five nfts costs lte 83,058 gas", async function(){
-      expect(await estimateGas("mint", "uint256", "5", _cost.mul(5))).lte(83058)
+    it("Minting five nfts costs 83,058 gas", async function(){
+      expect(await estimateGas("mint", "uint256", "5", _cost.mul(5))).eq(83058)
     })
 
-    it("Minting twenty nfts costs lte 112,458 gas", async function(){
-      expect(await estimateGas("mint", "uint256", "20", _cost.mul(20))).lte(112458)
+    it("Minting twenty nfts costs 112,458 gas", async function(){
+      expect(await estimateGas("mint", "uint256", "20", _cost.mul(20))).eq(112458)
     })
   })
 })
@@ -122,19 +122,19 @@ describe("tokenURI", function(){
     expect(await raccools.isRevealed()).to.be.true
   })
 
-  context("Gas used", function(){
-    it("Unrevealed metadata uses less than 200,000 gas", async function(){
+  context("gas used", function(){
+    it("Unrevealed metadata uses 177,652 gas", async function(){
       await raccools.mint(1, {value: _cost})
 
-      expect(await estimateGas("tokenURI", "uint256", "1")).lte(200000)
+      expect(await estimateGas("tokenURI", "uint256", "1")).eq(177652)
 
     })
 
-    it("Revealed metadata uses less than 200,000 gas", async function(){
+    it("Revealed metadata uses 209,713 gas", async function(){
       await raccools.mint(1, {value: _cost})
       await raccools.setBaseSeed("test")
 
-      expect(await estimateGas("tokenURI", "uint256", "1")).lte(200000)
+      expect(await estimateGas("tokenURI", "uint256", "1")).eq(209713)
 
     })
   })
