@@ -8,8 +8,6 @@ import "./interfaces/IWardrobe.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import '@openzeppelin/contracts/utils/Strings.sol';
 
-import "hardhat/console.sol";
-
 // @author mande.eth
 // @notice
 contract Raccools is ERC721A, Ownable {
