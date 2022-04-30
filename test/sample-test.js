@@ -61,6 +61,7 @@ describe("tokenURI", function(){
     expect(await raccools.mint(1, {value: _cost}))
 
     let metadata = await raccools.tokenURI(1)
+    console.log(metadata)
     metadata = metadata.replace("data:application/json;base64,", "")
     metadata = JSON.parse(atob(metadata))
 
@@ -75,7 +76,7 @@ describe("tokenURI", function(){
     svg = svg.replace("data:image/svg+xml;base64,", "")
     svg = atob(svg)
 
-    expect(svg.startsWith("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0, 0, 100, 100'>")).to.be.true
+    expect(svg.startsWith('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0, 0, 100, 100">')).to.be.true
   })
 
   it("Shows final metadata when revealed", async function () {
@@ -99,7 +100,7 @@ describe("tokenURI", function(){
     svg = svg.replace("data:image/svg+xml;base64,", "")
     svg = atob(svg)
 
-    expect(svg.startsWith("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0, 0, 100, 100'>")).to.be.true
+    expect(svg.startsWith('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0, 0, 100, 100">')).to.be.true
   })
 
   it("Reverts when token is not minted", async function () {
