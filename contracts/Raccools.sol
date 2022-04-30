@@ -111,16 +111,6 @@ contract Raccools is ERC721A, Ownable {
     return string(abi.encodePacked("data:application/json;base64,", encodedJson));
   }
 
-  function raccoolImage(Raccool memory raccool_) private pure returns(string memory){
-    string memory backgroundSvg = raccool_.background[1];
-    string memory furSvg = raccool_.fur[1];
-    string memory faceSvg = raccool_.face[1];
-    string memory headSvg = raccool_.head[1];
-    string memory clothesSvg = raccool_.clothes[1];
-
-    return Base64.encode(abi.encodePacked(_svg1, backgroundSvg, _svg2, furSvg, faceSvg, headSvg, clothesSvg, _svg3));
-  }
-
   function raccoolAttributes(Raccool memory raccool_) private pure returns(string memory){
     string memory backgroundName = raccool_.background[0];
     string memory furName = raccool_.fur[0];
@@ -129,6 +119,16 @@ contract Raccools is ERC721A, Ownable {
     string memory clothesName = raccool_.clothes[0];
 
     return string(abi.encodePacked(_attr1, backgroundName, _attr2, furName, _attr3, faceName, _attr4, headName, _attr5, clothesName));
+  }
+
+  function raccoolImage(Raccool memory raccool_) private pure returns(string memory){
+    string memory backgroundSvg = raccool_.background[1];
+    string memory furSvg = raccool_.fur[1];
+    string memory faceSvg = raccool_.face[1];
+    string memory headSvg = raccool_.head[1];
+    string memory clothesSvg = raccool_.clothes[1];
+
+    return Base64.encode(abi.encodePacked(_svg1, backgroundSvg, _svg2, furSvg, faceSvg, headSvg, clothesSvg, _svg3));
   }
 
   function getRaccool(uint256 tokenId_) private view returns(Raccool memory raccool){
