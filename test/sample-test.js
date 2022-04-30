@@ -123,10 +123,10 @@ describe("tokenURI", function(){
   })
 
   context("gas used", function(){
-    it("Unrevealed metadata uses 177,652 gas", async function(){
+    it("Unrevealed metadata uses 721,325 gas", async function(){
       await raccools.mint(1, {value: _cost})
 
-      expect(await estimateGas("tokenURI", "uint256", "1")).eq(177652)
+      expect(await estimateGas("tokenURI", "uint256", "1")).eq(721325)
 
     })
 
