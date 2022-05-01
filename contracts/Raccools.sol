@@ -84,6 +84,7 @@ contract Raccools is ERC721A, Ownable {
   }
 
   // TODO: is it needed to use callerIsUser?
+  // TODO: can i transfer the token to a contract
   function customize(uint256 tokenId_, uint256 head_, uint256 clothes_) external {
     require(msg.sender == ownerOf(tokenId_));
 
@@ -100,7 +101,9 @@ contract Raccools is ERC721A, Ownable {
         wardrobe.burn(msg.sender, head_);
         emit HeadTransfer(msg.sender, address(0), head_);
       }
-  }
+
+      currentHead = head_;
+    }
 
     if(clothes_ > 0){
       if(currentClothes > 1){
@@ -111,8 +114,11 @@ contract Raccools is ERC721A, Ownable {
         wardrobe.burn(msg.sender, clothes_);
         emit ClothesTransfer(msg.sender, address(0), clothes_);
       }
-      //_customClothes[tokenId_] = clothes_;
+
+      currentClothes = head_;
     }
+
+    _customTraits[tokenId_] = encodeCustomTraits(currentHead, currentClothes);
   }
 
   function tokenURI(uint256 tokenId_) public view virtual override returns (string memory) {

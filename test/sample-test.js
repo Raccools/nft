@@ -137,11 +137,11 @@ describe("tokenURI", function(){
 
     })
 
-    it("revealed metadata uses 209,825 gas", async function(){
+    it("revealed metadata uses 208,025 gas", async function(){
       await raccools.mint(1, {value: _cost})
       await raccools.setBaseSeed("test")
 
-      expect(await estimateGas("tokenURI", "uint256", "1")).eq(209825)
+      expect(await estimateGas("tokenURI", "uint256", "1")).eq(208025)
     })
   })
 })
