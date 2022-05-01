@@ -6,7 +6,9 @@ import "./libraries/Base64.sol";
 import "./libraries/Traits.sol";
 import "./interfaces/IWardrobe.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import '@openzeppelin/contracts/utils/Strings.sol';
+import "@openzeppelin/contracts/utils/Strings.sol";
+
+import "hardhat/console.sol";
 
 // @author mande.eth
 // @notice
@@ -33,8 +35,8 @@ contract Raccools is ERC721A, Ownable {
   uint256[4] private _clothesRarities = [0, 0, 5, 5];
 
   // token custom assets
-  mapping(uint256 => uint256) private _customHead;
-  mapping(uint256 => uint256) private _customClothes;
+  // @dev encoded by f(a,b) = a * 2^128 + b
+  mapping(uint256 => uint256) private _customTraits;
 
   // json metadata
   string private constant _name1 = '{"name": "Raccools #';
@@ -61,6 +63,7 @@ contract Raccools is ERC721A, Ownable {
 
   // TODO: test logging
   event HeadTransfer(address indexed from, address indexed to, uint256 indexed id);
+
   event ClothesTransfer(address indexed from, address indexed to, uint256 indexed id);
 
   constructor(address wardrobe_) ERC721A("Raccools", "RACCOOL"){
@@ -84,34 +87,42 @@ contract Raccools is ERC721A, Ownable {
   function customize(uint256 tokenId_, uint256 head_, uint256 clothes_) external {
     require(msg.sender == ownerOf(tokenId_));
 
-    uint256 currentHead = getCustomHead(tokenId_);
-    uint256 currentClothes = getCustomClothes(tokenId_);
-
     IWardrobe wardrobe = IWardrobe(_wardrobe);
 
     if(head_ > 0){
-      if(currentHead > 1){
-        wardrobe.mint(msg.sender, currentHead);
-        emit HeadTransfer(address(0), msg.sender, currentHead);
-      }
-      if(head_ > 1){
-        wardrobe.burn(msg.sender, head_);
-        emit HeadTransfer(msg.sender, address(0), head_);
-      }
-      _customHead[tokenId_] = head_;
+//      uint256 currentHead = getCustomHead(tokenId_);
+//
+//      if(currentHead > 1){
+//        wardrobe.mint(msg.sender, currentHead);
+//        emit HeadTransfer(address(0), msg.sender, currentHead);
+//      }
+//      if(head_ > 1){
+//        wardrobe.burn(msg.sender, head_);
+//        emit HeadTransfer(msg.sender, address(0), head_);
+//      }
     }
+//
+//    if(clothes_ > 0){
+//      uint256 currentClothes = getCustomClothes(tokenId_);
+//
+//      if(currentClothes > 1){
+//        wardrobe.mint(msg.sender, currentClothes);
+//        emit ClothesTransfer(address(0), msg.sender, currentClothes);
+//      }
+//      if(clothes_ > 1){
+//        wardrobe.burn(msg.sender, clothes_);
+//        emit ClothesTransfer(msg.sender, address(0), clothes_);
+//      }
+//      _customClothes[tokenId_] = clothes_;
+//    }
+  }
 
-    if(clothes_ > 0){
-      if(currentClothes > 1){
-        wardrobe.mint(msg.sender, currentHead);
-        emit ClothesTransfer(address(0), msg.sender, currentClothes);
-      }
-      if(clothes_ > 1){
-        wardrobe.burn(msg.sender, clothes_);
-        emit ClothesTransfer(msg.sender, address(0), clothes_);
-      }
-      _customClothes[tokenId_] = clothes_;
-    }
+  function encodeCustomTraits(uint256 head_, uint256 clothes_) private pure returns(uint256){
+    return (1 << 128) * head_ + clothes_;
+  }
+
+  function decodeCustomTraits(uint256 _encoded) private pure returns(uint256, uint256){
+    return (uint256(_encoded) / (1 << 128), _encoded % (1 << 128));
   }
 
   function tokenURI(uint256 tokenId_) public view virtual override returns (string memory) {
@@ -148,11 +159,13 @@ contract Raccools is ERC721A, Ownable {
   function getRaccool(uint256 tokenId_) private view returns(Raccool memory raccool){
     if(isRevealed() == false) return getHiddenRaccool();
 
+    (uint256 customHead, uint256 customClothes) = decodeCustomTraits(_customTraits[tokenId_]);
+
     raccool.background = background(generateTrait(tokenId_, _backgroundRarities));
     raccool.fur = fur(generateTrait(tokenId_, _furRarities));
     raccool.face = face(generateTrait(tokenId_, _faceRarities));
-    raccool.head = head(customTrait(tokenId_, _headRarities, _customHead));
-    raccool.clothes = clothes(customTrait(tokenId_, _clothesRarities, _customClothes));
+    raccool.head = head(customHead > 0 ? customHead : generateTrait(tokenId_, _headRarities));
+    raccool.clothes = clothes(customClothes > 0 ? customClothes : generateTrait(tokenId_, _clothesRarities));
   }
 
   function getHiddenRaccool() private pure returns(Raccool memory raccool){
@@ -185,21 +198,6 @@ contract Raccools is ERC721A, Ownable {
 
   function clothes(uint256 clothesIndex_) private view returns(string[2] memory){
     return IWardrobe(_wardrobe).clothes(clothesIndex_);
-  }
-
-  function getCustomHead(uint256 tokenId_) private view returns(uint256){
-    return customTrait(tokenId_, _headRarities, _customHead);
-  }
-
-  function getCustomClothes(uint256 tokenId_) private view returns(uint256){
-    return customTrait(tokenId_, _clothesRarities, _customClothes);
-  }
-
-  function customTrait(uint256 tokenId_, uint256[4] memory rarities_, mapping(uint256 => uint256) storage custom_) private view returns(uint256){
-    uint256 n = custom_[tokenId_];
-    if(n == 0) return generateTrait(tokenId_, rarities_);
-
-    return n;
   }
 
   function generateTrait(uint256 tokenId_, uint256[4] memory rarities_) private view returns(uint256){

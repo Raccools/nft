@@ -142,19 +142,23 @@ describe("tokenURI", function(){
       await raccools.setBaseSeed("test")
 
       expect(await estimateGas("tokenURI", "uint256", "1")).eq(209825)
-
     })
   })
 })
 
 describe("customize", function(){
-  it("successfully removes head", async function(){
+  it("successfully ", async function(){
     await raccools.mint(1, {value: _cost})
-    let tx = await raccools.customize(1, 1, 0)
-    await expect(tx).to.emit(raccools, "HeadTransfer")
+    let tx = await raccools.customize(1, 1, 3)
+    //await expect(tx).to.emit(raccools, "HeadTransfer")
+    //await expect(tx).to.not.emit(raccools, "ClothesTransfer")
+    let txinfo = await tx.wait()
+
+    console.log({gasUsed: txinfo.gasUsed})
+    console.log({cumulativeGasUsed: txinfo.cumulativeGasUsed})
 
     //await expect(raccools.customize(1, 1, 0)).to.emit(raccools, "Customize")
-    console.log(await tx.wait())
+    // console.log(await tx.wait())
 
   })
 })
