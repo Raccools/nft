@@ -89,40 +89,30 @@ contract Raccools is ERC721A, Ownable {
 
     IWardrobe wardrobe = IWardrobe(_wardrobe);
 
+    (uint256 currentHead, uint256 currentClothes) = customTraits(tokenId_);
+
     if(head_ > 0){
-//      uint256 currentHead = getCustomHead(tokenId_);
-//
-//      if(currentHead > 1){
-//        wardrobe.mint(msg.sender, currentHead);
-//        emit HeadTransfer(address(0), msg.sender, currentHead);
-//      }
-//      if(head_ > 1){
-//        wardrobe.burn(msg.sender, head_);
-//        emit HeadTransfer(msg.sender, address(0), head_);
-//      }
+      if(currentHead > 1){
+        wardrobe.mint(msg.sender, currentHead);
+        emit HeadTransfer(address(0), msg.sender, currentHead);
+      }
+      if(head_ > 1){
+        wardrobe.burn(msg.sender, head_);
+        emit HeadTransfer(msg.sender, address(0), head_);
+      }
+  }
+
+    if(clothes_ > 0){
+      if(currentClothes > 1){
+        wardrobe.mint(msg.sender, currentClothes);
+        emit ClothesTransfer(address(0), msg.sender, currentClothes);
+      }
+      if(clothes_ > 1){
+        wardrobe.burn(msg.sender, clothes_);
+        emit ClothesTransfer(msg.sender, address(0), clothes_);
+      }
+      //_customClothes[tokenId_] = clothes_;
     }
-//
-//    if(clothes_ > 0){
-//      uint256 currentClothes = getCustomClothes(tokenId_);
-//
-//      if(currentClothes > 1){
-//        wardrobe.mint(msg.sender, currentClothes);
-//        emit ClothesTransfer(address(0), msg.sender, currentClothes);
-//      }
-//      if(clothes_ > 1){
-//        wardrobe.burn(msg.sender, clothes_);
-//        emit ClothesTransfer(msg.sender, address(0), clothes_);
-//      }
-//      _customClothes[tokenId_] = clothes_;
-//    }
-  }
-
-  function encodeCustomTraits(uint256 head_, uint256 clothes_) private pure returns(uint256){
-    return (1 << 128) * head_ + clothes_;
-  }
-
-  function decodeCustomTraits(uint256 _encoded) private pure returns(uint256, uint256){
-    return (uint256(_encoded) / (1 << 128), _encoded % (1 << 128));
   }
 
   function tokenURI(uint256 tokenId_) public view virtual override returns (string memory) {
@@ -159,13 +149,13 @@ contract Raccools is ERC721A, Ownable {
   function getRaccool(uint256 tokenId_) private view returns(Raccool memory raccool){
     if(isRevealed() == false) return getHiddenRaccool();
 
-    (uint256 customHead, uint256 customClothes) = decodeCustomTraits(_customTraits[tokenId_]);
+    (uint256 customHead, uint256 customClothes) = customTraits(tokenId_);
 
     raccool.background = background(generateTrait(tokenId_, _backgroundRarities));
     raccool.fur = fur(generateTrait(tokenId_, _furRarities));
     raccool.face = face(generateTrait(tokenId_, _faceRarities));
-    raccool.head = head(customHead > 0 ? customHead : generateTrait(tokenId_, _headRarities));
-    raccool.clothes = clothes(customClothes > 0 ? customClothes : generateTrait(tokenId_, _clothesRarities));
+    raccool.head = head(customHead);
+    raccool.clothes = clothes(customClothes);
   }
 
   function getHiddenRaccool() private pure returns(Raccool memory raccool){
@@ -200,6 +190,15 @@ contract Raccools is ERC721A, Ownable {
     return IWardrobe(_wardrobe).clothes(clothesIndex_);
   }
 
+  function customTraits(uint256 tokenId_) private view returns(uint256, uint256){
+    (uint256 customHead, uint256 customClothes) = decodeCustomTraits(_customTraits[tokenId_]);
+
+    if(customHead == 0) customHead = generateTrait(tokenId_, _headRarities);
+    if(customClothes == 0) customClothes = generateTrait(tokenId_, _clothesRarities);
+
+    return (customHead, customClothes);
+  }
+
   function generateTrait(uint256 tokenId_, uint256[4] memory rarities_) private view returns(uint256){
     uint256 n = 1 + random(tokenId_.toString()) % 10;
     uint256 trait = 0;
@@ -212,9 +211,19 @@ contract Raccools is ERC721A, Ownable {
     return trait;
   }
 
+  // Utils
+
   function random(string memory seed_) private view returns (uint256) {
     bytes memory seed = abi.encodePacked(_baseSeed, seed_);
     return uint256(keccak256(seed));
+  }
+
+  function encodeCustomTraits(uint256 head_, uint256 clothes_) private pure returns(uint256){
+    return (1 << 128) * head_ + clothes_;
+  }
+
+  function decodeCustomTraits(uint256 _encoded) private pure returns(uint256, uint256){
+    return (_encoded / (1 << 128), _encoded % (1 << 128));
   }
 
   // ERC721A Metadata
