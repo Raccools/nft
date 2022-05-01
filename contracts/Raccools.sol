@@ -59,6 +59,10 @@ contract Raccools is ERC721A, Ownable {
     string[2] clothes;
   }
 
+  // TODO: test logging
+  event HeadTransfer(address indexed from, address indexed to, uint256 indexed id);
+  event ClothesTransfer(address indexed from, address indexed to, uint256 indexed id);
+
   constructor(address wardrobe_) ERC721A("Raccools", "RACCOOL"){
     _wardrobe = wardrobe_;
   }
@@ -80,20 +84,32 @@ contract Raccools is ERC721A, Ownable {
   function customize(uint256 tokenId_, uint256 head_, uint256 clothes_) external {
     require(msg.sender == ownerOf(tokenId_));
 
-    uint256 currentHead = _customHead[tokenId_];
-    uint256 currentClothes = _customClothes[tokenId_];
+    uint256 currentHead = getCustomHead(tokenId_);
+    uint256 currentClothes = getCustomClothes(tokenId_);
 
     IWardrobe wardrobe = IWardrobe(_wardrobe);
 
     if(head_ > 0){
-      if(currentHead > 1) wardrobe.mint(msg.sender, currentHead);
-      if(head_ > 1) wardrobe.burn(msg.sender, head_);
+      if(currentHead > 1){
+        wardrobe.mint(msg.sender, currentHead);
+        emit HeadTransfer(address(0), msg.sender, currentHead);
+      }
+      if(head_ > 1){
+        wardrobe.burn(msg.sender, head_);
+        emit HeadTransfer(msg.sender, address(0), head_);
+      }
       _customHead[tokenId_] = head_;
     }
 
     if(clothes_ > 0){
-      if(currentClothes > 1) wardrobe.mint(msg.sender, currentHead);
-      if(clothes_ > 0) wardrobe.burn(msg.sender, clothes_);
+      if(currentClothes > 1){
+        wardrobe.mint(msg.sender, currentHead);
+        emit ClothesTransfer(address(0), msg.sender, currentClothes);
+      }
+      if(clothes_ > 1){
+        wardrobe.burn(msg.sender, clothes_);
+        emit ClothesTransfer(msg.sender, address(0), clothes_);
+      }
       _customClothes[tokenId_] = clothes_;
     }
   }
@@ -169,6 +185,14 @@ contract Raccools is ERC721A, Ownable {
 
   function clothes(uint256 clothesIndex_) private view returns(string[2] memory){
     return IWardrobe(_wardrobe).clothes(clothesIndex_);
+  }
+
+  function getCustomHead(uint256 tokenId_) private view returns(uint256){
+    return customTrait(tokenId_, _headRarities, _customHead);
+  }
+
+  function getCustomClothes(uint256 tokenId_) private view returns(uint256){
+    return customTrait(tokenId_, _clothesRarities, _customClothes);
   }
 
   function customTrait(uint256 tokenId_, uint256[4] memory rarities_, mapping(uint256 => uint256) storage custom_) private view returns(uint256){
