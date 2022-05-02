@@ -87,38 +87,28 @@ contract Raccools is ERC721A, Ownable {
   // TODO: can i transfer the token to a contract
   function customize(uint256 tokenId_, uint256 head_, uint256 clothes_) external {
     require(msg.sender == ownerOf(tokenId_));
+    require(head_ > 0 || clothes_ > 0);
 
     IWardrobe wardrobe = IWardrobe(_wardrobe);
+
+    _mint(msg.sender, 1);
+    _burn(tokenId_);
 
     (uint256 currentHead, uint256 currentClothes) = customTraits(tokenId_);
 
     if(head_ > 0){
-      if(currentHead > 1){
-        wardrobe.mint(msg.sender, currentHead);
-        emit HeadTransfer(address(0), msg.sender, currentHead);
-      }
-      if(head_ > 1){
-        wardrobe.burn(msg.sender, head_);
-        emit HeadTransfer(msg.sender, address(0), head_);
-      }
-
-      currentHead = head_;
+      if(currentHead > 1){ wardrobe.mint(msg.sender, currentHead); }
+      if(head_ > 1){ wardrobe.burn(msg.sender, head_); }
     }
+    else { head_ = currentHead; }
 
     if(clothes_ > 0){
-      if(currentClothes > 1){
-        wardrobe.mint(msg.sender, currentClothes);
-        emit ClothesTransfer(address(0), msg.sender, currentClothes);
-      }
-      if(clothes_ > 1){
-        wardrobe.burn(msg.sender, clothes_);
-        emit ClothesTransfer(msg.sender, address(0), clothes_);
-      }
-
-      currentClothes = head_;
+      if(currentClothes > 1){ wardrobe.mint(msg.sender, currentClothes); }
+      if(clothes_ > 1){ wardrobe.burn(msg.sender, clothes_); }
     }
+    else { clothes_ = currentClothes; }
 
-    _customTraits[tokenId_] = encodeCustomTraits(currentHead, currentClothes);
+    _customTraits[tokenId_] = encodeCustomTraits(head_, clothes_);
   }
 
   function tokenURI(uint256 tokenId_) public view virtual override returns (string memory) {
