@@ -91,10 +91,9 @@ contract Raccools is ERC721A, Ownable {
 
     IWardrobe wardrobe = IWardrobe(_wardrobe);
 
-    _mint(msg.sender, 1);
     _burn(tokenId_);
 
-    (uint256 currentHead, uint256 currentClothes) = customTraits(tokenId_);
+    (uint256 token, uint256 currentHead, uint256 currentClothes) = customTraits(tokenId_);
 
     if(head_ > 0){
       if(currentHead > 1){ wardrobe.mint(msg.sender, currentHead); }
@@ -108,7 +107,8 @@ contract Raccools is ERC721A, Ownable {
     }
     else { clothes_ = currentClothes; }
 
-    _customTraits[tokenId_] = encodeCustomTraits(head_, clothes_);
+    _customTraits[_currentIndex] = encodeCustomTraits(token, head_, clothes_);
+    _mint(msg.sender, 1);
   }
 
   function tokenURI(uint256 tokenId_) public view virtual override returns (string memory) {
@@ -145,11 +145,11 @@ contract Raccools is ERC721A, Ownable {
   function getRaccool(uint256 tokenId_) private view returns(Raccool memory raccool){
     if(isRevealed() == false) return getHiddenRaccool();
 
-    (uint256 customHead, uint256 customClothes) = customTraits(tokenId_);
+    (uint256 token, uint256 customHead, uint256 customClothes) = customTraits(tokenId_);
 
-    raccool.background = background(generateTrait(tokenId_, _backgroundRarities));
-    raccool.fur = fur(generateTrait(tokenId_, _furRarities));
-    raccool.face = face(generateTrait(tokenId_, _faceRarities));
+    raccool.background = background(generateTrait(token, _backgroundRarities));
+    raccool.fur = fur(generateTrait(token, _furRarities));
+    raccool.face = face(generateTrait(token, _faceRarities));
     raccool.head = head(customHead);
     raccool.clothes = clothes(customClothes);
   }
@@ -186,13 +186,14 @@ contract Raccools is ERC721A, Ownable {
     return IWardrobe(_wardrobe).clothes(clothesIndex_);
   }
 
-  function customTraits(uint256 tokenId_) private view returns(uint256, uint256){
-    (uint256 customHead, uint256 customClothes) = decodeCustomTraits(_customTraits[tokenId_]);
+  // store all traits in the encoded var
+  function customTraits(uint256 tokenId_) private view returns(uint256, uint256, uint256){
+    (uint256 token, uint256 customHead, uint256 customClothes) = decodeCustomTraits(_customTraits[tokenId_]);
 
-    if(customHead == 0) customHead = generateTrait(tokenId_, _headRarities);
-    if(customClothes == 0) customClothes = generateTrait(tokenId_, _clothesRarities);
+    if(customHead == 0) customHead = generateTrait(token, _headRarities);
+    if(customClothes == 0) customClothes = generateTrait(token, _clothesRarities);
 
-    return (customHead, customClothes);
+    return (token, customHead, customClothes);
   }
 
   function generateTrait(uint256 tokenId_, uint256[4] memory rarities_) private view returns(uint256){
@@ -214,12 +215,12 @@ contract Raccools is ERC721A, Ownable {
     return uint256(keccak256(seed));
   }
 
-  function encodeCustomTraits(uint256 head_, uint256 clothes_) private pure returns(uint256){
-    return (1 << 128) * head_ + clothes_;
+  function encodeCustomTraits(uint256 token_, uint256 head_, uint256 clothes_) private pure returns(uint256){
+    return (1 << 128) * token_ + (1 << 64) * head_ + clothes_;
   }
 
-  function decodeCustomTraits(uint256 _encoded) private pure returns(uint256, uint256){
-    return (_encoded / (1 << 128), _encoded % (1 << 128));
+  function decodeCustomTraits(uint256 _encoded) private pure returns(uint256, uint256, uint256){
+    return (_encoded / (1 << 128), (_encoded % (1 << 128)) / (1 << 64), _encoded % (1 << 64));
   }
 
   // ERC721A Metadata
