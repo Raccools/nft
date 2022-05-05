@@ -21,6 +21,14 @@ contract Wardrobe is ERC1155, Ownable {
     return _clothes[clothesIndex_];
   }
 
+  function headTokenId(uint256 headIndex_) external pure returns(uint256){
+    return headIndex_ * 2;
+  }
+
+  function clothesTokenId(uint256 clothesIndex_) external pure returns(uint256){
+    return clothesIndex_ * 2 + 1;
+  }
+
   function mint(address _to, uint256 _tokenId) external {
     _mint(_to, _tokenId, 1, "");
   }

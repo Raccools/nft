@@ -17,7 +17,7 @@ beforeEach(async function () {
 
   let Raccools = await ethers.getContractFactory("Raccools")
   let Wardrobe = await ethers.getContractFactory("Wardrobe")
-  let wardrobe = await Wardrobe.deploy()
+  wardrobe = await Wardrobe.deploy()
   await wardrobe.deployed()
 
   raccools = await Raccools.deploy(wardrobe.address)
@@ -147,18 +147,41 @@ describe("tokenURI", function(){
 })
 
 describe("customize", function(){
-  it("successfully ", async function(){
+  it("reverts when no traits are given", async function(){
     await raccools.mint(1, {value: _cost})
-    let tx = await raccools.customize(1, 1, 3)
-    //await expect(tx).to.emit(raccools, "HeadTransfer")
-    //await expect(tx).to.not.emit(raccools, "ClothesTransfer")
-    let txinfo = await tx.wait()
+    await expect(raccools.customize(1, 0, 0)).to.revertedWith("Requires at least one trait")
+    console.log(await wardrobe.balanceOf(owner.address, 3))
+  })
 
-    console.log({gasUsed: txinfo.gasUsed})
-    console.log({cumulativeGasUsed: txinfo.cumulativeGasUsed})
+  it("reverts when not the token owner", async function(){
+    await raccools.connect(addr1).mint(1, {value: _cost})
+    await expect(raccools.customize(1, 1, 1)).to.revertedWith("Must be the token owner")
+    console.log(await wardrobe.balanceOf(owner.address, 3))
+  })
 
-    //await expect(raccools.customize(1, 1, 0)).to.emit(raccools, "Customize")
-    // console.log(await tx.wait())
+  it("successfully removes head trait", async function(){
+    await raccools.mint(1, {value: _cost})
+    let tx = await (await raccools.customize(1, 1, 1)).wait()
+
+    console.log(await wardrobe.balanceOf(owner.address, 2))
+    console.log(await wardrobe.balanceOf(owner.address, 3))
+
+    // console.log(tx)
+
+
+
 
   })
 })
+
+
+//    let tx = await raccools.customize(1, 1, 3)
+//    //await expect(tx).to.emit(raccools, "HeadTransfer")
+//    //await expect(tx).to.not.emit(raccools, "ClothesTransfer")
+//    let txinfo = await tx.wait()
+//
+//    console.log({gasUsed: txinfo.gasUsed})
+//    console.log({cumulativeGasUsed: txinfo.cumulativeGasUsed})
+//
+//    //await expect(raccools.customize(1, 1, 0)).to.emit(raccools, "Customize")
+//    // console.log(await tx.wait())

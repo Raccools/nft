@@ -9,4 +9,6 @@ interface IWardrobe {
   function balanceOf(address account_, uint256 tokenId_) external view returns(uint256);
   function head(uint256 headIndex_) external view returns(string[2] memory);
   function clothes(uint256 clothesIndex_) external view returns(string[2] memory);
+  function headTokenId(uint256 headIndex_) external pure returns(uint256);
+  function clothesTokenId(uint256 clothesIndex_) external pure returns(uint256);
 }

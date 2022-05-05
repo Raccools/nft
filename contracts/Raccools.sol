@@ -35,7 +35,6 @@ contract Raccools is ERC721A, Ownable {
   uint256[4] private _clothesRarities = [0, 0, 5, 5];
 
   // token custom assets
-  // @dev encoded by f(a,b) = a * 2^128 + b
   mapping(uint256 => uint256) private _customTraits;
 
   // json metadata
@@ -61,11 +60,6 @@ contract Raccools is ERC721A, Ownable {
     string[2] clothes;
   }
 
-  // TODO: test logging
-  event HeadTransfer(address indexed from, address indexed to, uint256 indexed id);
-
-  event ClothesTransfer(address indexed from, address indexed to, uint256 indexed id);
-
   constructor(address wardrobe_) ERC721A("Raccools", "RACCOOL"){
     _wardrobe = wardrobe_;
   }
@@ -86,8 +80,8 @@ contract Raccools is ERC721A, Ownable {
   // TODO: is it needed to use callerIsUser?
   // TODO: can i transfer the token to a contract
   function customize(uint256 tokenId_, uint256 head_, uint256 clothes_) external {
-    require(msg.sender == ownerOf(tokenId_));
-    require(head_ > 0 || clothes_ > 0);
+    require(msg.sender == ownerOf(tokenId_), "Must be the token owner");
+    require(head_ > 0 || clothes_ > 0, "Requires at least one trait");
 
     IWardrobe wardrobe = IWardrobe(_wardrobe);
 
@@ -96,14 +90,14 @@ contract Raccools is ERC721A, Ownable {
     (uint256 token, uint256 currentHead, uint256 currentClothes) = customTraits(tokenId_);
 
     if(head_ > 0){
-      if(currentHead > 1){ wardrobe.mint(msg.sender, currentHead); }
-      if(head_ > 1){ wardrobe.burn(msg.sender, head_); }
+      if(currentHead > 1){ wardrobe.mint(msg.sender, wardrobe.headTokenId(currentHead)); }
+      if(head_ > 1){ wardrobe.burn(msg.sender, wardrobe.headTokenId(head_)); }
     }
     else { head_ = currentHead; }
 
     if(clothes_ > 0){
-      if(currentClothes > 1){ wardrobe.mint(msg.sender, currentClothes); }
-      if(clothes_ > 1){ wardrobe.burn(msg.sender, clothes_); }
+      if(currentClothes > 1){ wardrobe.mint(msg.sender, wardrobe.clothesTokenId(currentClothes)); }
+      if(clothes_ > 1){ wardrobe.burn(msg.sender, wardrobe.clothesTokenId(clothes_)); }
     }
     else { clothes_ = currentClothes; }
 
