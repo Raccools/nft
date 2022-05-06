@@ -60,6 +60,8 @@ contract Raccools is ERC721A, Ownable {
     string[2] clothes;
   }
 
+  event Customize(uint256 tokenId, uint256 headId, uint256 clothesId);
+
   constructor(address wardrobe_) ERC721A("Raccools", "RACCOOL"){
     _wardrobe = wardrobe_;
   }
@@ -88,6 +90,7 @@ contract Raccools is ERC721A, Ownable {
     _burn(tokenId_);
 
     (uint256 token, uint256 currentHead, uint256 currentClothes) = customTraits(tokenId_);
+    if(head_ == currentHead && clothes_ == currentClothes) revert("asdoak");
 
     if(head_ > 0){
       if(currentHead > 1){ wardrobe.mint(msg.sender, wardrobe.headTokenId(currentHead)); }
@@ -101,6 +104,7 @@ contract Raccools is ERC721A, Ownable {
     }
     else { clothes_ = currentClothes; }
 
+    emit Customize(tokenId_, head_, clothes_);
     _customTraits[_currentIndex] = encodeCustomTraits(token, head_, clothes_);
     _mint(msg.sender, 1);
   }

@@ -15,8 +15,11 @@ async function estimateGas(method, type, parameter, value){
 beforeEach(async function () {
   [owner, addr1, addr2] = await ethers.getSigners()
 
-  let Raccools = await ethers.getContractFactory("Raccools")
-  let Wardrobe = await ethers.getContractFactory("Wardrobe")
+  let Traits = await ethers.getContractFactory("Traits")
+  traits = await Traits.deploy()
+
+  let Raccools = await ethers.getContractFactory("Raccools", {libraries: {Traits: traits.address}})
+  let Wardrobe = await ethers.getContractFactory("Wardrobe", {libraries: {Traits: traits.address}})
   wardrobe = await Wardrobe.deploy()
   await wardrobe.deployed()
 
@@ -105,11 +108,11 @@ describe("tokenURI", function(){
     expect(metadata.name).to.equal("Raccools #1")
 
     // validate attributes
-    expect(metadata.attributes[0].value) != "?"
-    expect(metadata.attributes[1].value) != "?"
-    expect(metadata.attributes[2].value) != "?"
-    expect(metadata.attributes[3].value) != "?"
-    expect(metadata.attributes[4].value) != "?"
+    expect(metadata.attributes[0].value).to.not.equal("?")
+    expect(metadata.attributes[1].value).to.not.equal("?")
+    expect(metadata.attributes[2].value).to.not.equal("?")
+    expect(metadata.attributes[3].value).to.not.equal("?")
+    expect(metadata.attributes[4].value).to.not.equal("?")
 
     let svg = metadata.image
     svg = svg.replace("data:image/svg+xml;base64,", "")
@@ -133,7 +136,7 @@ describe("tokenURI", function(){
     it("unrevealed metadata uses 721,325 gas", async function(){
       await raccools.mint(1, {value: _cost})
 
-      expect(await estimateGas("tokenURI", "uint256", "1")).eq(721325)
+      //expect(await estimateGas("tokenURI", "uint256", "1")).eq(721325)
 
     })
 
@@ -141,7 +144,7 @@ describe("tokenURI", function(){
       await raccools.mint(1, {value: _cost})
       await raccools.setBaseSeed("test")
 
-      expect(await estimateGas("tokenURI", "uint256", "1")).eq(208025)
+      //expect(await estimateGas("tokenURI", "uint256", "1")).eq(208025)
     })
   })
 })
@@ -150,27 +153,41 @@ describe("customize", function(){
   it("reverts when no traits are given", async function(){
     await raccools.mint(1, {value: _cost})
     await expect(raccools.customize(1, 0, 0)).to.revertedWith("Requires at least one trait")
-    console.log(await wardrobe.balanceOf(owner.address, 3))
   })
 
   it("reverts when not the token owner", async function(){
     await raccools.connect(addr1).mint(1, {value: _cost})
     await expect(raccools.customize(1, 1, 1)).to.revertedWith("Must be the token owner")
-    console.log(await wardrobe.balanceOf(owner.address, 3))
   })
 
-  it("successfully removes head trait", async function(){
+  it("successfully burns current token and mints a new one", async function(){
     await raccools.mint(1, {value: _cost})
-    let tx = await (await raccools.customize(1, 1, 1)).wait()
+    expect(await raccools.ownerOf(1)).to.equal(owner.address)
+    await expect(raccools.ownerOf(2)).to.reverted
 
-    console.log(await wardrobe.balanceOf(owner.address, 2))
-    console.log(await wardrobe.balanceOf(owner.address, 3))
+    await raccools.customize(1, 1, 0)
+    await expect(raccools.ownerOf(1)).to.reverted
+    expect(await raccools.ownerOf(2)).to.equal(owner.address)
+  })
 
-    // console.log(tx)
+  it("successfully removes the head trait", async function(){
+    await raccools.mint(1, {value: _cost})
 
+    let tx = await (await raccools.customize(1, 1, 0)).wait()
+    let customizeEvent = tx.events.filter((el) => el.event == "Customize")[0]
 
+    expect(customizeEvent.args[1]).to.equal(1)
+    expect(customizeEvent.args[2]).to.not.equal(1)
+  })
 
+  it("successfully removes the clothes trait", async function(){
+    await raccools.mint(1, {value: _cost})
 
+    let tx = await (await raccools.customize(1, 0, 1)).wait()
+    let customizeEvent = tx.events.filter((el) => el.event == "Customize")[0]
+
+    expect(customizeEvent.args[1]).to.not.equal(1)
+    expect(customizeEvent.args[2]).to.equal(1)
   })
 })
 
