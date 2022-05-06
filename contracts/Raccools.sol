@@ -60,7 +60,7 @@ contract Raccools is ERC721A, Ownable {
     string[2] clothes;
   }
 
-  event Customize(uint256 tokenId, uint256 headId, uint256 clothesId);
+  event Customize(uint256 newTokenId, uint256[2] headChanges, uint256[2] clothesChanges);
 
   constructor(address wardrobe_) ERC721A("Raccools", "RACCOOL"){
     _wardrobe = wardrobe_;
@@ -83,28 +83,29 @@ contract Raccools is ERC721A, Ownable {
   // TODO: can i transfer the token to a contract
   function customize(uint256 tokenId_, uint256 head_, uint256 clothes_) external {
     require(msg.sender == ownerOf(tokenId_), "Must be the token owner");
-    require(head_ > 0 || clothes_ > 0, "Requires at least one trait");
 
     IWardrobe wardrobe = IWardrobe(_wardrobe);
 
     _burn(tokenId_);
 
     (uint256 token, uint256 currentHead, uint256 currentClothes) = customTraits(tokenId_);
-    if(head_ == currentHead && clothes_ == currentClothes) revert("asdoak");
 
-    if(head_ > 0){
+    if(head_ == 0) head_ = currentHead;
+    if(clothes_ == 0) clothes_ = currentClothes;
+
+    if(head_ == currentHead && clothes_ == currentClothes) revert("Would produce same raccool");
+
+    if(head_ != currentHead){
       if(currentHead > 1){ wardrobe.mint(msg.sender, wardrobe.headTokenId(currentHead)); }
       if(head_ > 1){ wardrobe.burn(msg.sender, wardrobe.headTokenId(head_)); }
     }
-    else { head_ = currentHead; }
 
-    if(clothes_ > 0){
+    if(clothes_ != currentClothes){
       if(currentClothes > 1){ wardrobe.mint(msg.sender, wardrobe.clothesTokenId(currentClothes)); }
       if(clothes_ > 1){ wardrobe.burn(msg.sender, wardrobe.clothesTokenId(clothes_)); }
     }
-    else { clothes_ = currentClothes; }
 
-    emit Customize(tokenId_, head_, clothes_);
+    emit Customize(_currentIndex, [currentHead, head_], [currentClothes, clothes_]);
     _customTraits[_currentIndex] = encodeCustomTraits(token, head_, clothes_);
     _mint(msg.sender, 1);
   }
@@ -188,6 +189,7 @@ contract Raccools is ERC721A, Ownable {
   function customTraits(uint256 tokenId_) private view returns(uint256, uint256, uint256){
     (uint256 token, uint256 customHead, uint256 customClothes) = decodeCustomTraits(_customTraits[tokenId_]);
 
+    if(token == 0) token = tokenId_;
     if(customHead == 0) customHead = generateTrait(token, _headRarities);
     if(customClothes == 0) customClothes = generateTrait(token, _clothesRarities);
 

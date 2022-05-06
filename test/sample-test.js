@@ -152,7 +152,13 @@ describe("tokenURI", function(){
 describe("customize", function(){
   it("reverts when no traits are given", async function(){
     await raccools.mint(1, {value: _cost})
-    await expect(raccools.customize(1, 0, 0)).to.revertedWith("Requires at least one trait")
+    await expect(raccools.customize(1, 0, 0)).to.revertedWith("Would produce same raccool")
+  })
+
+  it("reverts when given traits would produce the same raccool", async function(){
+    await raccools.mint(1, {value: _cost})
+    await raccools.customize(1, 1, 1)
+    await expect(raccools.customize(2, 1, 1)).to.revertedWith("Would produce same raccool")
   })
 
   it("reverts when not the token owner", async function(){
@@ -160,7 +166,17 @@ describe("customize", function(){
     await expect(raccools.customize(1, 1, 1)).to.revertedWith("Must be the token owner")
   })
 
-  it("successfully burns current token and mints a new one", async function(){
+  it("reverts when not owning head trait token", async function(){
+    await raccools.mint(1, {value: _cost})
+    await expect(raccools.customize(1, 2, 0)).to.reverted
+  })
+
+  it("reverts when not owning clothes trait token", async function(){
+    await raccools.mint(1, {value: _cost})
+    await expect(raccools.customize(1, 0, 2)).to.reverted
+  })
+
+  it("successfully burns current raccool and mints a new one", async function(){
     await raccools.mint(1, {value: _cost})
     expect(await raccools.ownerOf(1)).to.equal(owner.address)
     await expect(raccools.ownerOf(2)).to.reverted
@@ -170,24 +186,107 @@ describe("customize", function(){
     expect(await raccools.ownerOf(2)).to.equal(owner.address)
   })
 
-  it("successfully removes the head trait", async function(){
+  it("successfully removes head trait and mint it", async function(){
     await raccools.mint(1, {value: _cost})
 
     let tx = await (await raccools.customize(1, 1, 0)).wait()
-    let customizeEvent = tx.events.filter((el) => el.event == "Customize")[0]
+    let { args: [, headChanges, clothesChanges] } = tx.events.filter((el) => el.event == "Customize")[0]
 
-    expect(customizeEvent.args[1]).to.equal(1)
-    expect(customizeEvent.args[2]).to.not.equal(1)
+    expect(headChanges[1]).to.equal(1)
+    expect(clothesChanges[1]).to.equal(clothesChanges[0])
+
+    let headTokenId = wardrobe.headTokenId(headChanges[0])
+
+    expect(await wardrobe.balanceOf(owner.address, headTokenId)).to.equal(1)
   })
 
-  it("successfully removes the clothes trait", async function(){
+  it("successfully removes the clothes trait and mint it", async function(){
     await raccools.mint(1, {value: _cost})
 
     let tx = await (await raccools.customize(1, 0, 1)).wait()
-    let customizeEvent = tx.events.filter((el) => el.event == "Customize")[0]
+    let { args: [, headChanges, clothesChanges] } = tx.events.filter((el) => el.event == "Customize")[0]
 
-    expect(customizeEvent.args[1]).to.not.equal(1)
-    expect(customizeEvent.args[2]).to.equal(1)
+    expect(clothesChanges[1]).to.equal(1)
+    expect(headChanges[1]).to.equal(headChanges[0])
+
+    let clothesTokenId = wardrobe.clothesTokenId(clothesChanges[0])
+
+    expect(await wardrobe.balanceOf(owner.address, clothesTokenId)).to.equal(1)
+  })
+
+  it("successfully removes clothes and head traits", async function(){
+    await raccools.mint(1, {value: _cost})
+
+    let tx = await (await raccools.customize(1, 1, 1)).wait()
+    let { args: [, headChanges, clothesChanges] } = tx.events.filter((el) => el.event == "Customize")[0]
+
+    expect(clothesChanges[1]).to.equal(1)
+    expect(headChanges[1]).to.equal(1)
+
+    let clothesTokenId = wardrobe.clothesTokenId(clothesChanges[0])
+    let headTokenId = wardrobe.headTokenId(headChanges[0])
+
+    expect(await wardrobe.balanceOf(owner.address, headTokenId)).to.equal(1)
+    expect(await wardrobe.balanceOf(owner.address, clothesTokenId)).to.equal(1)
+  })
+
+  it("successfully changes head trait", async function(){
+    await raccools.mint(1, {value: _cost})
+    let tx1 = await (await raccools.customize(1, 1, 0)).wait()
+
+    let { args: [, headChanges1, ] } = tx1.events.filter((el) => el.event == "Customize")[0]
+
+    let head = headChanges1[0]
+
+    // had to mint 2, first one got the same head trait
+    await raccools.mint(2, {value: _cost.mul(2)})
+    let tx = await (await raccools.customize(4, head, 0)).wait()
+    let { args: [, headChanges, clothesChanges] } = tx.events.filter((el) => el.event == "Customize")[0]
+
+    expect(headChanges[1]).to.equal(head)
+    expect(clothesChanges[1]).to.equal(clothesChanges[0])
+
+    expect(await wardrobe.balanceOf(owner.address, wardrobe.headTokenId(headChanges[0]))).to.equal(1)
+  })
+
+  it("successfully changes clothes trait", async function(){
+    await raccools.mint(1, {value: _cost})
+    let tx1 = await (await raccools.customize(1, 0, 1)).wait()
+
+    let { args: [, , clothesChanges1] } = tx1.events.filter((el) => el.event == "Customize")[0]
+
+    let clothes = clothesChanges1[0]
+
+    // had to mint 2, first one got the same head trait
+    await raccools.mint(2, {value: _cost.mul(2)})
+    let tx = await (await raccools.customize(4, 0, clothes)).wait()
+    let { args: [, headChanges, clothesChanges] } = tx.events.filter((el) => el.event == "Customize")[0]
+
+    expect(headChanges[1]).to.equal(headChanges[0])
+    expect(clothesChanges[1]).to.equal(clothes)
+
+    expect(await wardrobe.balanceOf(owner.address, wardrobe.clothesTokenId(clothesChanges[0]))).to.equal(1)
+  })
+
+  it("successfully changes clothes and head traits", async function(){
+    await raccools.mint(1, {value: _cost})
+    let tx1 = await (await raccools.customize(1, 1, 1)).wait()
+
+    let { args: [, headChanges1, clothesChanges1] } = tx1.events.filter((el) => el.event == "Customize")[0]
+
+    let clothes = clothesChanges1[0]
+    let head = headChanges1[0]
+
+    // had to mint 2, first one got the same head trait
+    await raccools.mint(2, {value: _cost.mul(2)})
+    let tx = await (await raccools.customize(4, head, clothes)).wait()
+    let { args: [, headChanges, clothesChanges] } = tx.events.filter((el) => el.event == "Customize")[0]
+
+    expect(headChanges[1]).to.equal(head)
+    expect(clothesChanges[1]).to.equal(clothes)
+
+    expect(await wardrobe.balanceOf(owner.address, wardrobe.clothesTokenId(clothesChanges[0]))).to.equal(1)
+    expect(await wardrobe.balanceOf(owner.address, wardrobe.headTokenId(headChanges[0]))).to.equal(1)
   })
 })
 
