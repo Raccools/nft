@@ -288,6 +288,71 @@ describe("customize", function(){
     expect(await wardrobe.balanceOf(owner.address, wardrobe.clothesTokenId(clothesChanges[0]))).to.equal(1)
     expect(await wardrobe.balanceOf(owner.address, wardrobe.headTokenId(headChanges[0]))).to.equal(1)
   })
+
+  context("gas used", function(){
+    it("removing head costs 186,652 gas", async function(){
+      await raccools.mint(1, {value: _cost})
+      let tx = await (await raccools.customize(1, 1, 0)).wait()
+
+      expect(tx.gasUsed).to.equal(186652)
+    })
+
+    it("removing clothes costs 186,901 gas", async function(){
+      await raccools.mint(1, {value: _cost})
+      let tx = await (await raccools.customize(1, 0, 1)).wait()
+
+      expect(tx.gasUsed).to.equal(186901)
+    })
+
+    it("removing clothes and head costs 215,950 gas", async function(){
+      await raccools.mint(1, {value: _cost})
+      let tx = await (await raccools.customize(1, 1, 1)).wait()
+
+      expect(tx.gasUsed).to.equal(215950)
+    })
+
+    it("changing head trait costs 196,267 gas", async function(){
+      await raccools.mint(1, {value: _cost})
+      let tx1 = await (await raccools.customize(1, 1, 0)).wait()
+      let { args: [, headChanges1, ] } = tx1.events.filter((el) => el.event == "Customize")[0]
+      let head = headChanges1[0]
+
+      // had to mint 2, first one got the same head trait
+      await raccools.mint(2, {value: _cost.mul(2)})
+      let tx = await (await raccools.customize(4, head, 0)).wait()
+
+      expect(tx.gasUsed).to.equal(196267)
+    })
+
+    it("changing clothes trait costs 196,754 gas", async function(){
+      await raccools.mint(1, {value: _cost})
+      let tx1 = await (await raccools.customize(1, 0, 1)).wait()
+      let { args: [, , clothesChanges] } = tx1.events.filter((el) => el.event == "Customize")[0]
+      let clothes = clothesChanges[0]
+
+      // had to mint 2, first one got the same head trait
+      await raccools.mint(2, {value: _cost.mul(2)})
+      let tx = await (await raccools.customize(4, 0, clothes)).wait()
+
+      expect(tx.gasUsed).to.equal(196754)
+    })
+
+    it("changing clothes and head traits costs 232,695 gas", async function(){
+      await raccools.mint(1, {value: _cost})
+      let tx1 = await (await raccools.customize(1, 1, 1)).wait()
+
+      let { args: [, headChanges1, clothesChanges1] } = tx1.events.filter((el) => el.event == "Customize")[0]
+
+      let clothes = clothesChanges1[0]
+      let head = headChanges1[0]
+
+      // had to mint 2, first one got the same head trait
+      await raccools.mint(2, {value: _cost.mul(2)})
+      let tx = await (await raccools.customize(4, head, clothes)).wait()
+
+      expect(tx.gasUsed).to.equal(232695)
+    })
+  })
 })
 
 
