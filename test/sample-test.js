@@ -126,12 +126,6 @@ describe("tokenURI", function(){
     await expect(raccools.tokenURI(1)).to.be.revertedWith("Token not minted")
   })
 
-  it("reveals metadata when base seed is set", async function () {
-    expect(await raccools.isRevealed()).to.be.false
-    expect(await raccools.setBaseSeed("test"))
-    expect(await raccools.isRevealed()).to.be.true
-  })
-
   context("gas used", function(){
     it("unrevealed metadata uses 721,325 gas", async function(){
       await raccools.mint(1, {value: _cost})
@@ -195,7 +189,7 @@ describe("customize", function(){
     expect(headChanges[1]).to.equal(1)
     expect(clothesChanges[1]).to.equal(clothesChanges[0])
 
-    let headTokenId = wardrobe.headTokenId(headChanges[0])
+    let headTokenId = headChanges[0] * 2
 
     expect(await wardrobe.balanceOf(owner.address, headTokenId)).to.equal(1)
   })
@@ -209,7 +203,7 @@ describe("customize", function(){
     expect(clothesChanges[1]).to.equal(1)
     expect(headChanges[1]).to.equal(headChanges[0])
 
-    let clothesTokenId = wardrobe.clothesTokenId(clothesChanges[0])
+    let clothesTokenId = clothesChanges[0] * 2 + 1
 
     expect(await wardrobe.balanceOf(owner.address, clothesTokenId)).to.equal(1)
   })
@@ -223,8 +217,8 @@ describe("customize", function(){
     expect(clothesChanges[1]).to.equal(1)
     expect(headChanges[1]).to.equal(1)
 
-    let clothesTokenId = wardrobe.clothesTokenId(clothesChanges[0])
-    let headTokenId = wardrobe.headTokenId(headChanges[0])
+    let clothesTokenId = clothesChanges[0] * 2 + 1
+    let headTokenId = headChanges[0] * 2
 
     expect(await wardrobe.balanceOf(owner.address, headTokenId)).to.equal(1)
     expect(await wardrobe.balanceOf(owner.address, clothesTokenId)).to.equal(1)
@@ -246,7 +240,8 @@ describe("customize", function(){
     expect(headChanges[1]).to.equal(head)
     expect(clothesChanges[1]).to.equal(clothesChanges[0])
 
-    expect(await wardrobe.balanceOf(owner.address, wardrobe.headTokenId(headChanges[0]))).to.equal(1)
+    expect(await wardrobe.balanceOf(owner.address, head * 2)).to.equal(0)
+    expect(await wardrobe.balanceOf(owner.address, headChanges[0] * 2)).to.equal(1)
   })
 
   it("successfully changes clothes trait", async function(){
@@ -265,7 +260,8 @@ describe("customize", function(){
     expect(headChanges[1]).to.equal(headChanges[0])
     expect(clothesChanges[1]).to.equal(clothes)
 
-    expect(await wardrobe.balanceOf(owner.address, wardrobe.clothesTokenId(clothesChanges[0]))).to.equal(1)
+    expect(await wardrobe.balanceOf(owner.address, clothes * 2 + 1)).to.equal(0)
+    expect(await wardrobe.balanceOf(owner.address, clothesChanges[0] * 2 +1)).to.equal(1)
   })
 
   it("successfully changes clothes and head traits", async function(){
@@ -285,33 +281,35 @@ describe("customize", function(){
     expect(headChanges[1]).to.equal(head)
     expect(clothesChanges[1]).to.equal(clothes)
 
-    expect(await wardrobe.balanceOf(owner.address, wardrobe.clothesTokenId(clothesChanges[0]))).to.equal(1)
-    expect(await wardrobe.balanceOf(owner.address, wardrobe.headTokenId(headChanges[0]))).to.equal(1)
+    expect(await wardrobe.balanceOf(owner.address, head * 2)).to.equal(0)
+    expect(await wardrobe.balanceOf(owner.address, clothes * 2 + 1)).to.equal(0)
+    expect(await wardrobe.balanceOf(owner.address, clothesChanges[0] * 2 + 1)).to.equal(1)
+    expect(await wardrobe.balanceOf(owner.address, headChanges[0] * 2)).to.equal(1)
   })
 
   context("gas used", function(){
-    it("removing head costs 186,652 gas", async function(){
+    it("removing head costs 185,320 gas", async function(){
       await raccools.mint(1, {value: _cost})
       let tx = await (await raccools.customize(1, 1, 0)).wait()
 
-      expect(tx.gasUsed).to.equal(186652)
+      expect(tx.gasUsed).to.equal(185320)
     })
 
-    it("removing clothes costs 186,901 gas", async function(){
+    it("removing clothes costs 185,592 gas", async function(){
       await raccools.mint(1, {value: _cost})
       let tx = await (await raccools.customize(1, 0, 1)).wait()
 
-      expect(tx.gasUsed).to.equal(186901)
+      expect(tx.gasUsed).to.equal(185592)
     })
 
-    it("removing clothes and head costs 215,950 gas", async function(){
+    it("removing clothes and head costs 213,325 gas", async function(){
       await raccools.mint(1, {value: _cost})
       let tx = await (await raccools.customize(1, 1, 1)).wait()
 
-      expect(tx.gasUsed).to.equal(215950)
+      expect(tx.gasUsed).to.equal(213325)
     })
 
-    it("changing head trait costs 196,267 gas", async function(){
+    it("changing head trait costs 193,620 gas", async function(){
       await raccools.mint(1, {value: _cost})
       let tx1 = await (await raccools.customize(1, 1, 0)).wait()
       let { args: [, headChanges1, ] } = tx1.events.filter((el) => el.event == "Customize")[0]
@@ -321,10 +319,10 @@ describe("customize", function(){
       await raccools.mint(2, {value: _cost.mul(2)})
       let tx = await (await raccools.customize(4, head, 0)).wait()
 
-      expect(tx.gasUsed).to.equal(196267)
+      expect(tx.gasUsed).to.equal(193620)
     })
 
-    it("changing clothes trait costs 196,754 gas", async function(){
+    it("changing clothes trait costs 194,086 gas", async function(){
       await raccools.mint(1, {value: _cost})
       let tx1 = await (await raccools.customize(1, 0, 1)).wait()
       let { args: [, , clothesChanges] } = tx1.events.filter((el) => el.event == "Customize")[0]
@@ -334,10 +332,10 @@ describe("customize", function(){
       await raccools.mint(2, {value: _cost.mul(2)})
       let tx = await (await raccools.customize(4, 0, clothes)).wait()
 
-      expect(tx.gasUsed).to.equal(196754)
+      expect(tx.gasUsed).to.equal(194086)
     })
 
-    it("changing clothes and head traits costs 232,695 gas", async function(){
+    it("changing clothes and head traits costs 227,396 gas", async function(){
       await raccools.mint(1, {value: _cost})
       let tx1 = await (await raccools.customize(1, 1, 1)).wait()
 
@@ -350,7 +348,7 @@ describe("customize", function(){
       await raccools.mint(2, {value: _cost.mul(2)})
       let tx = await (await raccools.customize(4, head, clothes)).wait()
 
-      expect(tx.gasUsed).to.equal(232695)
+      expect(tx.gasUsed).to.equal(227396)
     })
   })
 })

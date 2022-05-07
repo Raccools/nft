@@ -85,9 +85,6 @@ contract Raccools is ERC721A, Ownable {
     require(msg.sender == ownerOf(tokenId_), "Must be the token owner");
 
     IWardrobe wardrobe = IWardrobe(_wardrobe);
-
-    _burn(tokenId_);
-
     (uint256 token, uint256 currentHead, uint256 currentClothes) = customTraits(tokenId_);
 
     if(head_ == 0) head_ = currentHead;
@@ -96,17 +93,19 @@ contract Raccools is ERC721A, Ownable {
     if(head_ == currentHead && clothes_ == currentClothes) revert("Would produce same raccool");
 
     if(head_ != currentHead){
-      if(currentHead > 1){ wardrobe.mint(msg.sender, wardrobe.headTokenId(currentHead)); }
-      if(head_ > 1){ wardrobe.burn(msg.sender, wardrobe.headTokenId(head_)); }
+      if(currentHead > 1) wardrobe.mintHead(msg.sender, currentHead);
+      if(head_ > 1) wardrobe.burnHead(msg.sender, head_);
     }
 
     if(clothes_ != currentClothes){
-      if(currentClothes > 1){ wardrobe.mint(msg.sender, wardrobe.clothesTokenId(currentClothes)); }
-      if(clothes_ > 1){ wardrobe.burn(msg.sender, wardrobe.clothesTokenId(clothes_)); }
+      if(currentClothes > 1) wardrobe.mintClothes(msg.sender, currentClothes);
+      if(clothes_ > 1) wardrobe.burnClothes(msg.sender, clothes_);
     }
 
     emit Customize(_currentIndex, [currentHead, head_], [currentClothes, clothes_]);
     _customTraits[_currentIndex] = encodeCustomTraits(token, head_, clothes_);
+
+    _burn(tokenId_);
     _mint(msg.sender, 1);
   }
 
@@ -120,6 +119,8 @@ contract Raccools is ERC721A, Ownable {
 
     return string(abi.encodePacked("data:application/json;base64,", encodedJson));
   }
+
+  // On-chain engine
 
   function raccoolAttributes(Raccool memory raccool_) private pure returns(string memory){
     string memory backgroundName = raccool_.background[0];
@@ -161,10 +162,6 @@ contract Raccools is ERC721A, Ownable {
     raccool.clothes = Traits.hiddenClothes();
   }
 
-  function isRevealed() public view returns(bool){
-    return bytes(_baseSeed).length > 0;
-  }
-
   function background(uint256 backgroundIndex_) private pure returns(string[2] memory){
     return Traits.backgrounds()[backgroundIndex_];
   }
@@ -185,7 +182,6 @@ contract Raccools is ERC721A, Ownable {
     return IWardrobe(_wardrobe).clothes(clothesIndex_);
   }
 
-  // store all traits in the encoded var
   function customTraits(uint256 tokenId_) private view returns(uint256, uint256, uint256){
     (uint256 token, uint256 customHead, uint256 customClothes) = decodeCustomTraits(_customTraits[tokenId_]);
 
@@ -209,6 +205,10 @@ contract Raccools is ERC721A, Ownable {
   }
 
   // Utils
+
+  function isRevealed() private view returns(bool){
+    return bytes(_baseSeed).length > 0;
+  }
 
   function random(string memory seed_) private view returns (uint256) {
     bytes memory seed = abi.encodePacked(_baseSeed, seed_);
