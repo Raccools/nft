@@ -29,8 +29,8 @@ contract Raccools is ERC721A, Ownable {
 
   // trait rarities
   uint256[4] private _backgroundRarities = [5, 5];
-  uint256[4] private _furRarities = [5, 5];
-  uint256[4] private _faceRarities = [5, 5];
+  uint256[4] private _furRarities = [10];
+  uint256[4] private _faceRarities = [10];
   uint256[4] private _headRarities = [0, 0, 5, 5];
   uint256[4] private _clothesRarities = [0, 0, 5, 5];
 
@@ -79,9 +79,7 @@ contract Raccools is ERC721A, Ownable {
     _mint(msg.sender, amount_);
   }
 
-  // TODO: is it needed to use callerIsUser?
-  // TODO: can i transfer the token to a contract
-  function customize(uint256 tokenId_, uint256 head_, uint256 clothes_) external {
+  function customize(uint256 tokenId_, uint256 head_, uint256 clothes_) external callerIsUser {
     require(msg.sender == ownerOf(tokenId_), "Must be the token owner");
 
     IWardrobe wardrobe = IWardrobe(_wardrobe);
