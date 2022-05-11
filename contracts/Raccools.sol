@@ -145,9 +145,9 @@ contract Raccools is ERC721A, Ownable {
 
     (uint256 token, uint256 customHead, uint256 customClothes) = customTraits(tokenId_);
 
-    raccool.background = background(generateTrait(token, _backgroundRarities));
-    raccool.fur = fur(generateTrait(token, _furRarities));
-    raccool.face = face(generateTrait(token, _faceRarities));
+    raccool.background = background(generateTrait("background", token, _backgroundRarities));
+    raccool.fur = fur(generateTrait("fur", token, _furRarities));
+    raccool.face = face(generateTrait("face", token, _faceRarities));
     raccool.head = head(customHead);
     raccool.clothes = clothes(customClothes);
   }
@@ -184,14 +184,14 @@ contract Raccools is ERC721A, Ownable {
     (uint256 token, uint256 customHead, uint256 customClothes) = decodeCustomTraits(_customTraits[tokenId_]);
 
     if(token == 0) token = tokenId_;
-    if(customHead == 0) customHead = generateTrait(token, _headRarities);
-    if(customClothes == 0) customClothes = generateTrait(token, _clothesRarities);
+    if(customHead == 0) customHead = generateTrait("head", token, _headRarities);
+    if(customClothes == 0) customClothes = generateTrait("clothes", token, _clothesRarities);
 
     return (token, customHead, customClothes);
   }
 
-  function generateTrait(uint256 tokenId_, uint256[4] memory rarities_) private view returns(uint256){
-    uint256 n = 1 + random(tokenId_.toString()) % 10;
+  function generateTrait(string memory salt_, uint256 tokenId_, uint256[4] memory rarities_) private view returns(uint256){
+    uint256 n = 1 + random(string(abi.encodePacked(tokenId_.toString(), salt_))) % 10;
     uint256 trait = 0;
 
     while(n > rarities_[trait]){
