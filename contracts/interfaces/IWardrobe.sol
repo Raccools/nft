@@ -11,4 +11,6 @@ interface IWardrobe {
   function balanceOf(address account_, uint256 tokenId_) external view returns(uint256);
   function head(uint256 headIndex_) external view returns(string[2] memory);
   function clothes(uint256 clothesIndex_) external view returns(string[2] memory);
+
+  event TransferSingle(address operator, address from, address to, uint256 id, uint256 amount);
 }

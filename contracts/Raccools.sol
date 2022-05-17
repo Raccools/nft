@@ -28,11 +28,11 @@ contract Raccools is ERC721A, Ownable {
   address private immutable _wardrobe;
 
   // trait rarities
-  uint256[4] private _backgroundRarities = [5, 5];
-  uint256[4] private _furRarities = [10];
-  uint256[4] private _faceRarities = [10];
-  uint256[4] private _headRarities = [0, 0, 5, 5];
-  uint256[4] private _clothesRarities = [0, 0, 5, 5];
+  uint256[10] private _backgroundRarities = [0, 0, 0, 0, 0, 1, 1, 1, 1, 1];
+  uint256[10] private _furRarities = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+  uint256[10] private _faceRarities = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+  uint256[10] private _headRarities = [2, 2, 2, 2, 2, 3, 3, 3, 3, 3];
+  uint256[10] private _clothesRarities = [2, 2, 2, 2, 2, 3, 3, 3, 3, 3];
 
   // token custom assets
   mapping(uint256 => uint256) private _customTraits;
@@ -80,10 +80,11 @@ contract Raccools is ERC721A, Ownable {
   }
 
   function customize(uint256 tokenId_, uint256 head_, uint256 clothes_) external callerIsUser {
-    require(msg.sender == ownerOf(tokenId_), "Must be the token owner");
+    //require(_totalMinted() == _maxSupply, "Not available yet");
+    require(msg.sender == ownerOf(tokenId_), "Must be the token owner");  // 5,267 gas
 
     IWardrobe wardrobe = IWardrobe(_wardrobe);
-    (uint256 token, uint256 currentHead, uint256 currentClothes) = customTraits(tokenId_);
+    (uint256 token, uint256 currentHead, uint256 currentClothes) = customTraits(tokenId_); // 16,828 gas
 
     if(head_ == 0) head_ = currentHead;
     if(clothes_ == 0) clothes_ = currentClothes;
@@ -91,20 +92,57 @@ contract Raccools is ERC721A, Ownable {
     if(head_ == currentHead && clothes_ == currentClothes) revert("Would produce same raccool");
 
     if(head_ != currentHead){
-      if(currentHead > 1) wardrobe.mintHead(msg.sender, currentHead);
-      if(head_ > 1) wardrobe.burnHead(msg.sender, head_);
+      if(currentHead > 1) wardrobe.mintHead(msg.sender, currentHead); // 32,481 gas
+      if(head_ > 1) wardrobe.burnHead(msg.sender, head_); // 5,839 gas
     }
 
     if(clothes_ != currentClothes){
-      if(currentClothes > 1) wardrobe.mintClothes(msg.sender, currentClothes);
-      if(clothes_ > 1) wardrobe.burnClothes(msg.sender, clothes_);
+      if(currentClothes > 1) wardrobe.mintClothes(msg.sender, currentClothes); // 32,481 gas
+      if(clothes_ > 1) wardrobe.burnClothes(msg.sender, clothes_); // 5,839 gas
     }
 
-    emit Customize(_currentIndex, [currentHead, head_], [currentClothes, clothes_]);
-    _customTraits[_currentIndex] = encodeCustomTraits(token, head_, clothes_);
+    emit Customize(_currentIndex, [currentHead, head_], [currentClothes, clothes_]); // 3,955 gas
+    _customTraits[_currentIndex] = encodeCustomTraits(token, head_, clothes_); // 23,153 gas
 
-    _burn(tokenId_);
-    _mint(msg.sender, 1);
+    _burn(tokenId_); // 41,804 gas
+    _mint(msg.sender, 1); // 26,975 gas
+  }
+
+  function customizeSwap(uint256[2] calldata tokenIds_, bool head_, bool clothes_) external callerIsUser {
+    //require(_totalMinted() == _maxSupply, "Not available yet");
+    require(msg.sender == ownerOf(tokenIds_[0]), "Must be the token owner");  // 5,267 gas
+    require(msg.sender == ownerOf(tokenIds_[1]), "Must be the token owner");  // 5,267 gas
+    require(head_ || clothes_, "Would produce same raccools");
+
+    (uint256 tokenA, uint256 currentHeadA, uint256 currentClothesA) = customTraits(tokenIds_[0]); // 16,828 gas
+    (uint256 tokenB, uint256 currentHeadB, uint256 currentClothesB) = customTraits(tokenIds_[1]); // 16,828 gas
+
+    uint256 headA = currentHeadA;
+    uint256 headB = currentHeadB;
+    uint256 clothesA = currentClothesA;
+    uint256 clothesB = currentClothesB;
+
+    if(head_){
+      headA = currentHeadB;
+      headB = currentHeadA;
+    }
+
+    if(clothes_){
+      clothesA = currentClothesB;
+      clothesB = currentClothesA;
+    }
+
+    emit Customize(_currentIndex, [currentHeadA, headA], [currentClothesA, clothesA]); // 3,955 gas
+    _customTraits[_currentIndex] = encodeCustomTraits(tokenA, headA, clothesA); // 23,153 gas
+
+    _burn(tokenIds_[0]); // 41,804 gas
+    _mint(msg.sender, 1); // 26,975 gas
+
+    emit Customize(_currentIndex, [currentHeadB, headB], [currentClothesB, clothesB]); // 3,955 gas
+    _customTraits[_currentIndex] = encodeCustomTraits(tokenB, headB, clothesB); // 23,153 gas
+
+    _burn(tokenIds_[1]); // 41,804 gas
+    _mint(msg.sender, 1); // 26,975 gas
   }
 
   function tokenURI(uint256 tokenId_) public view virtual override returns (string memory) {
@@ -190,16 +228,10 @@ contract Raccools is ERC721A, Ownable {
     return (token, customHead, customClothes);
   }
 
-  function generateTrait(string memory salt_, uint256 tokenId_, uint256[4] memory rarities_) private view returns(uint256){
-    uint256 n = 1 + random(string(abi.encodePacked(tokenId_.toString(), salt_))) % 10;
-    uint256 trait = 0;
+  function generateTrait(string memory salt_, uint256 tokenId_, uint256[10] storage rarities_) private view returns(uint256){
+    uint256 n = random(string(abi.encodePacked(tokenId_.toString(), salt_))) % 10;
 
-    while(n > rarities_[trait]){
-      n -= rarities_[trait];
-      trait++;
-    }
-
-    return trait;
+    return rarities_[n];
   }
 
   // Utils

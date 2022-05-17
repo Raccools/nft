@@ -19,10 +19,37 @@ contract Wardrobe is ERC1155, Ownable {
   string private constant _svg1 = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0, 0, 100, 100"><rect width="100" height="100" fill="#f54242"></rect>';
   string private constant _svg2= '</svg>';
 
+  address private _raccools;
+
   string[2][] private _heads = Traits.heads();
   string[2][] private _clothes = Traits.clothes();
 
   constructor() ERC1155(""){}
+
+  modifier callerIsRaccools(){
+    require(msg.sender == _raccools, "Not allowed");
+    _;
+  }
+
+  function createHead(string[2] memory trait_, uint256 amount_) external onlyOwner {
+    _heads.push(trait_);
+
+    uint256 tokenId = _heads.length - 1;
+
+    _mint(msg.sender, tokenId * 2, amount_, "");
+  }
+
+  function createClothes(string[2] memory trait_, uint256 amount_) external onlyOwner {
+    _clothes.push(trait_);
+
+    uint256 tokenId = _heads.length - 1;
+
+    _mint(msg.sender, tokenId * 2 + 1, amount_, "");
+  }
+
+  function setRaccoolsAddress(address raccools_) external {
+    _raccools = raccools_;
+  }
 
   function head(uint256 headIndex_) public view returns(string[2] memory){
     return _heads[headIndex_];
@@ -32,19 +59,19 @@ contract Wardrobe is ERC1155, Ownable {
     return _clothes[clothesIndex_];
   }
 
-  function mintHead(address _to, uint256 _tokenId) external {
+  function mintHead(address _to, uint256 _tokenId) external callerIsRaccools {
     _mint(_to, _tokenId * 2, 1, "");
   }
 
-  function mintClothes(address _to, uint256 _tokenId) external {
+  function mintClothes(address _to, uint256 _tokenId) external callerIsRaccools {
     _mint(_to, _tokenId * 2 + 1, 1, "");
   }
 
-  function burnHead(address _account, uint256 _tokenId) external {
+  function burnHead(address _account, uint256 _tokenId) external callerIsRaccools {
     _burn(_account, _tokenId * 2, 1);
   }
 
-  function burnClothes(address _account, uint256 _tokenId) external {
+  function burnClothes(address _account, uint256 _tokenId) external callerIsRaccools {
     _burn(_account, _tokenId * 2 + 1, 1);
   }
 
